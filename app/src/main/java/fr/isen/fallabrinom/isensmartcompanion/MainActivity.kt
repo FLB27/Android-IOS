@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,15 +73,17 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChatScreen() {
     var message by remember { mutableStateOf("") } // Message en cours d'édition
-    var messagesList by remember { mutableStateOf(listOf<String>()) } // Liste des messages envoyés
+    var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
 
     val context = LocalContext.current // Pour afficher le Toast
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(), // Remplit tout l'écran
-        bottomBar = { // Barre de saisie en bas
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
             BottomAppBar(
-                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
             ) {
                 TextField(
                     value = message,
@@ -93,14 +96,17 @@ fun ChatScreen() {
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     ),
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp)
                 )
 
                 Button(
                     onClick = {
                         if (message.isNotBlank()) {
-                            messagesList = messagesList + message // Ajoute le message à la liste
-                            message = "" // Réinitialise la zone de saisie
+                            messagesList = messagesList + (message to false) // Ajoute le message utilisateur
+                            messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
+                            message = "" // Efface le champ après envoi
                             Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
                         }
                     },
@@ -108,7 +114,8 @@ fun ChatScreen() {
                         containerColor = Color.Red,
                         contentColor = Color.White
                     ),
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier
+                        .padding(end = 8.dp)
                         .shadow(4.dp, shape = RoundedCornerShape(20.dp))
                 ) {
                     Icon(
@@ -119,25 +126,44 @@ fun ChatScreen() {
                 }
             }
         }
-    ) { innerPadding -> // ✅ Ajout du contenu principal (messages envoyés)
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Bottom
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Liste des messages
             LazyColumn(
-                modifier = Modifier.weight(1f), // Remplit tout l'espace dispo sauf la barre en bas
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(messagesList) { msg -> //message écrit
-                    Text(msg, fontSize = 18.sp)
+                items(messagesList) { (msg, isResponse) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (isResponse) Arrangement.End else Arrangement.Start
+                    ) {
+                        Text(
+                            text = msg,
+                            fontSize = 18.sp,
+                            color = Color.White,
+                            modifier = Modifier
+                                .background(
+                                    if (isResponse) Color.Red else Color.Gray,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .padding(8.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun Greeting() {
@@ -161,30 +187,39 @@ fun CenteredBox() {
 
 @Composable
 fun API() {
-    Image(
-        painter = painterResource(id = R.drawable.logo_isen),
-        contentDescription = "Mon image locale",
+    Column(
         modifier = Modifier
-            .size(150.dp)
-            .padding(top = 10.dp) // Ajoute un espace en haut
-            .padding(bottom = 0.dp) // Ajoute un espace en haut
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Image et titre en haut
+        Image(
+            painter = painterResource(id = R.drawable.logo_isen),
+            contentDescription = "Mon image locale",
+            modifier = Modifier
+                .size(150.dp)
+                .padding(top = 10.dp, bottom = 5.dp)
+        )
+        Text(
+            text = "Smart Companion",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
 
-    )
-    Text(
-        text = "Smart Companion",
-        modifier = Modifier.padding(top = 0.dp) // 🔥 Pas d’espace supplémentaire
-    )
-    MessageList(
-        "Pas de message",
-    )
+        // Zone des messages qui prend tout l'espace disponible
+        MessageList(
+            modifier = Modifier
+                .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
+                .fillMaxWidth()
+        )
+
+    }
 }
 
 @Composable
-fun MessageList(msg:String){
-    Text(
-    text = $msg,
-    modifier = Modifier.padding(top = 0.dp) // 🔥 Pas d’espace supplémentaire
-    )
+fun MessageList(modifier: Modifier) {
+
 }
 
 
