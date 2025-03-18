@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -62,107 +63,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ISENSmartCompanionTheme {
-                    ChatScreen()
+                    API()
                     Greeting()
             }
         }
     }
 }
 
-
-@Composable
-fun ChatScreen() {
-    var message by remember { mutableStateOf("") } // Message en cours d'édition
-    var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
-
-    val context = LocalContext.current // Pour afficher le Toast
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            BottomAppBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-            ) {
-                TextField(
-                    value = message,
-                    onValueChange = { message = it },
-                    placeholder = { Text("Tapez votre message...") },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.LightGray,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 8.dp)
-                )
-
-                Button(
-                    onClick = {
-                        if (message.isNotBlank()) {
-                            messagesList = messagesList + (message to false) // Ajoute le message utilisateur
-                            messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
-                            message = "" // Efface le champ après envoi
-                            Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .shadow(4.dp, shape = RoundedCornerShape(20.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Envoyer",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Liste des messages
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(messagesList) { (msg, isResponse) ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (isResponse) Arrangement.End else Arrangement.Start
-                    ) {
-                        Text(
-                            text = msg,
-                            fontSize = 18.sp,
-                            color = Color.White,
-                            modifier = Modifier
-                                .background(
-                                    if (isResponse) Color.Red else Color.Gray,
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .padding(8.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 @Composable
@@ -187,6 +94,11 @@ fun CenteredBox() {
 
 @Composable
 fun API() {
+    var message by remember { mutableStateOf("") } // Message en cours d'édition
+    var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
+
+    val context = LocalContext.current // Pour afficher le Toast
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -207,21 +119,108 @@ fun API() {
             fontWeight = FontWeight.Bold
         )
 
-        // Zone des messages qui prend tout l'espace disponible
+        // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
         MessageList(
+            messagesList = messagesList,
             modifier = Modifier
                 .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
                 .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 5.dp)
         )
+
+        // 🔹 BARRE DE SAISIE EN BAS
+        BottomBar(
+            message = message,
+            onMessageChange = { message = it },
+            onSendClick = {
+                if (message.isNotBlank()) {
+                    messagesList = messagesList + (message to false) // Ajoute le message utilisateur
+                    messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
+                    message = "" // Efface la zone de texte
+                    Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+
+        //Barre de Navigation
+
 
     }
 }
 
 @Composable
-fun MessageList(modifier: Modifier) {
-
+fun MessageList(
+    messagesList: List<Pair<String, Boolean>>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(messagesList) { (msg, isResponse) ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (isResponse) Arrangement.End else Arrangement.Start
+            ) {
+                Text(
+                    text = msg,
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    modifier = Modifier
+                        .background(
+                            if (isResponse) Color.Red else Color.Gray,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(8.dp) //taille du contour du texte
+                )
+            }
+        }
+    }
 }
 
+@Composable
+fun BottomBar(
+    message: String,
+    onMessageChange: (String) -> Unit,
+    onSendClick: () -> Unit
+) {
+    BottomAppBar(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+    ) {
+        TextField(
+            value = message,
+            onValueChange = onMessageChange,
+            placeholder = { Text("Tapez votre message...") },
+            shape = RoundedCornerShape(20.dp),
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.LightGray,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent
+            ),
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+        )
+
+        Button(
+            onClick = onSendClick,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Red,
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .padding(end = 8.dp)
+                .shadow(4.dp, shape = RoundedCornerShape(20.dp))
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Send,
+                contentDescription = "Envoyer",
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
