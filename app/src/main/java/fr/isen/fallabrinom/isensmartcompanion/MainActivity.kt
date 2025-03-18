@@ -129,53 +129,121 @@ fun API() {
     var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
 
     val context = LocalContext.current // Pour afficher le Toast
+    val navController = rememberNavController()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Image et titre en haut
-        Image(
-            painter = painterResource(id = R.drawable.logo_isen),
-            contentDescription = "Mon image locale",
-            modifier = Modifier
-                .size(150.dp)
-                .padding(top = 10.dp, bottom = 5.dp)
-        )
-        Text(
-            text = "Smart Companion",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
-        MessageList(
-            messagesList = messagesList,
-            modifier = Modifier
-                .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 5.dp)
-        )
-
-        // 🔹 BARRE DE SAISIE EN BAS
-        BottomBar(
-            message = message,
-            onMessageChange = { message = it },
-            onSendClick = {
-                if (message.isNotBlank()) {
-                    messagesList = messagesList + (message to false) // Ajoute le message utilisateur
-                    messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
-                    message = "" // Efface la zone de texte
-                    Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
+    Scaffold(
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Transparent),
+                    //.padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_isen),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(100.dp)
+                    )
+                    Text(
+                        text = "Smart Companion",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
-        )
+        },
+        bottomBar = {
+            BottomBar( //fonction qui crée la navbar + insertion txt + bouton
+                message = message,
+                onMessageChange = { message = it },
+                onSendClick = {
+                    if (message.isNotBlank()) {
+                        messagesList = messagesList + (message to false) // Ajoute le message utilisateur
+                        messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
+                        message = "" // Efface la zone de texte
+                        Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                navController = navController
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues), // ✅ Gère les marges pour éviter que le contenu soit sous la barre
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
+            MessageList(
+                messagesList = messagesList,
+                modifier = Modifier
+                    .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
+                    .fillMaxWidth()
+                    //.padding(top = 10.dp, bottom = 5.dp)
+            )
+        }
+    }
+}
 
-        //Barre de Navigation
+@Composable
+fun BottomBar(
+    message: String,
+    onMessageChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    navController: NavController
+) {
+    // Définition des onglets de navigation
+    val homeTab = TabBarItem("Home", Icons.Filled.Home, Icons.Outlined.Home)
+    val eventsTab = TabBarItem("Events", Icons.Filled.Notifications, Icons.Outlined.Notifications, badgeAmount = 7)
+    val agendaTab = TabBarItem("Calendar", Icons.Filled.DateRange, Icons.Outlined.DateRange)
+    val historyTab = TabBarItem("History", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
+    val tabBarItems = listOf(homeTab, eventsTab, agendaTab, historyTab)
 
+    Column {
+        // TextField et bouton d'envoi
+        BottomAppBar(
+            containerColor = Color.Transparent, //couleur carré autour du champ + bouton
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+        ) {
+            TextField(
+                value = message,
+                onValueChange = onMessageChange,
+                placeholder = { Text("Tapez votre message...") },
+                shape = RoundedCornerShape(20.dp),
+                colors = TextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.LightGray,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.White
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+            )
 
+            Button(
+                onClick = onSendClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .shadow(4.dp, shape = RoundedCornerShape(20.dp))
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Envoyer",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Barre de navigation
+        TabView(tabBarItems,navController = navController)
     }
 }
 
@@ -209,64 +277,6 @@ fun MessageList(
     }
 }
 
-@Composable
-fun BottomBar(
-    message: String,
-    onMessageChange: (String) -> Unit,
-    onSendClick: () -> Unit
-) {
-    // setting up the individual tabs
-    val homeTab = TabBarItem(title = "Home", selectedIcon = Icons.Filled.Home, unselectedIcon = Icons.Outlined.Home)
-    val eventsTab = TabBarItem(title = "Events", selectedIcon = Icons.Filled.Notifications, unselectedIcon = Icons.Outlined.Notifications, badgeAmount = 7)
-    val agendaTab = TabBarItem(title = "Calendar", selectedIcon = Icons.Filled.DateRange, unselectedIcon = Icons.Outlined.DateRange)
-    val historyTab = TabBarItem(title = "History", selectedIcon = Icons.AutoMirrored.Filled.List, unselectedIcon = Icons.AutoMirrored.Outlined.List)
-
-    // Création a list of all the tabs
-    val tabBarItems = listOf(homeTab, eventsTab, agendaTab, historyTab)
-
-    // creating our navController
-    val navController = rememberNavController()
-
-    BottomAppBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-
-    ) {
-        TextField(
-            value = message,
-            onValueChange = onMessageChange,
-            placeholder = { Text("Tapez votre message...") },
-            shape = RoundedCornerShape(20.dp),
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.LightGray,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.White
-            ),
-            modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
-        )
-
-        Button(
-            onClick = onSendClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Red,
-                contentColor = Color.White
-            ),
-            modifier = Modifier
-                .padding(end = 8.dp)
-                .shadow(4.dp, shape = RoundedCornerShape(20.dp))
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = "Envoyer",
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-    TabView(tabBarItems, navController) //ajout de la navbar
-
-}
 
 @Composable
 fun TabView(tabBarItems: List<TabBarItem>, navController: NavController) {
@@ -335,3 +345,19 @@ fun GreetingPreview() {
        // Greeting("Android")
     }
 }
+
+//Voir pour utiliser ça pour changer de page quand on clique sur un icône du navbar
+/*NavHost(navController = navController, startDestination = homeTab.title) {
+    composable(homeTab.title) {
+        Text(homeTab.title)
+    }
+    composable(alertsTab.title) {
+        Text(alertsTab.title)
+    }
+    composable(settingsTab.title) {
+        Text(settingsTab.title)
+    }
+    composable(moreTab.title) {
+        MoreView()
+    }
+}*/
