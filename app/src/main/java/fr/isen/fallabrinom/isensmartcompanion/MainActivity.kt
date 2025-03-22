@@ -54,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
@@ -112,6 +113,8 @@ fun API() {
     val context = LocalContext.current // Pour afficher le Toast
     val navController = rememberNavController()
 
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route //suit l'onglet cliqué
+
     Scaffold(
         topBar = {
             Box(
@@ -154,20 +157,23 @@ fun API() {
 
         NavGraph(navController,paddingValues) //gestion des onglets
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues), // ✅ Gère les marges pour éviter que le contenu soit sous la barre
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
-            MessageList(
-                messagesList = messagesList,
+        if (currentRoute == "Home") { //permet de conditionner l'affichage des échanges de message
+
+            Column(
                 modifier = Modifier
-                    .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(paddingValues), // ✅ Gère les marges pour éviter que le contenu soit sous la barre
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
+                MessageList(
+                    messagesList = messagesList,
+                    modifier = Modifier
+                        .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
+                        .fillMaxWidth()
                     //.padding(top = 10.dp, bottom = 5.dp)
-            )
+                )
+            }
         }
     }
 }
@@ -186,44 +192,48 @@ fun BottomBar(
     val historyTab = TabBarItem("History", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
     val tabBarItems = listOf(homeTab, eventsTab, agendaTab, historyTab)
 
+    // Obtenir l'onglet actuel sélectionné
+    val currentRoute = navHostController.currentBackStackEntryAsState().value?.destination?.route //suit l'onglet cliqué
 
     Column {
         // TextField et bouton d'envoi
-        BottomAppBar(
-            containerColor = Color.Transparent, //couleur carré autour du champ + bouton
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
-        ) {
-            TextField(
-                value = message,
-                onValueChange = onMessageChange,
-                placeholder = { Text("Tapez votre message...") },
-                shape = RoundedCornerShape(20.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.LightGray,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.White
-                ),
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
-            )
-
-            Button(
-                onClick = onSendClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .shadow(4.dp, shape = RoundedCornerShape(20.dp))
+        if (currentRoute == "Home") { //permet de conditionner l'affichage de la zone d'insertion
+            BottomAppBar(
+                containerColor = Color.Transparent, //couleur carré autour du champ + bouton
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Envoyer",
-                    modifier = Modifier.size(24.dp)
+                TextField(
+                    value = message,
+                    onValueChange = onMessageChange,
+                    placeholder = { Text("Tapez votre message...") },
+                    shape = RoundedCornerShape(20.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.LightGray,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp)
                 )
+
+                Button(
+                    onClick = onSendClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .shadow(4.dp, shape = RoundedCornerShape(20.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Envoyer",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 
@@ -232,6 +242,7 @@ fun BottomBar(
 
     }
 }
+
 
 @Composable
 fun MessageList(
