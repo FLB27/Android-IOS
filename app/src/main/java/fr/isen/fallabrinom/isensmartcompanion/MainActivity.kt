@@ -171,7 +171,6 @@ fun API() {
                     modifier = Modifier
                         .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
                         .fillMaxWidth()
-                    //.padding(top = 10.dp, bottom = 5.dp)
                 )
             }
         }
