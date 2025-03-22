@@ -53,6 +53,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
@@ -146,9 +147,13 @@ fun API() {
                         Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
                     }
                 },
+                navController //on donne le navcontroller
             )
         }
-    ) { paddingValues ->
+    ) {paddingValues  ->
+
+        NavGraph(navController,paddingValues) //gestion des onglets
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -172,6 +177,7 @@ fun BottomBar(
     message: String,
     onMessageChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    navHostController: NavHostController,
 ) {
     // Définition des onglets de navigation
     val homeTab = TabBarItem("Home", Icons.Filled.Home, Icons.Outlined.Home)
@@ -180,7 +186,6 @@ fun BottomBar(
     val historyTab = TabBarItem("History", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
     val tabBarItems = listOf(homeTab, eventsTab, agendaTab, historyTab)
 
-    val navController = rememberNavController() //génère et stocke un gestionnaire de fenêtre utilisable pour les NavHoqtController et les Navcontroller
 
     Column {
         // TextField et bouton d'envoi
@@ -223,8 +228,7 @@ fun BottomBar(
         }
 
         // Barre de navigation
-        TabView(tabBarItems,navController = navController)
-        NavGraph(navController)
+        TabView(tabBarItems,navController = navHostController)
 
     }
 }
@@ -266,4 +270,7 @@ fun GreetingPreview() {
        // Greeting("Android")
     }
 }
+
+
+
 
