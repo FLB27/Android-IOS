@@ -15,9 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavController
 import fr.isen.fallabrinom.isensmartcompanion.TabBarItem
+import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 
 @Composable
-fun TabView(tabBarItems: List<TabBarItem>, navController: NavController) {
+fun TabView(tabBarItems: List<TabBarItem>, navController: NavController,eventViewModel: EventViewModel) {
     var selectedTabIndex by rememberSaveable {
         mutableStateOf(0)
     }
@@ -45,9 +46,7 @@ fun TabView(tabBarItems: List<TabBarItem>, navController: NavController) {
     }
 }
 
-// This component helps to clean up the API call from our TabView above,
-// but could just as easily be added inside the TabView without creating this custom component
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun TabBarIconView(
     isSelected: Boolean,
@@ -56,7 +55,7 @@ fun TabBarIconView(
     title: String,
     badgeAmount: Int? = null
 ) {
-    BadgedBox(badge = { TabBarBadgeView(badgeAmount) }) {
+    BadgedBox(badge = { TabBarBadgeView(badgeAmount) }) { //permet de gérer les nombres de notif non lues
         Icon(
             imageVector = if (isSelected) {selectedIcon} else {unselectedIcon},
             contentDescription = title

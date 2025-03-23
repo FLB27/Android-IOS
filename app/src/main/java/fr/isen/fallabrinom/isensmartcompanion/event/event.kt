@@ -1,10 +1,12 @@
 package fr.isen.fallabrinom.isensmartcompanion.event
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,37 +21,56 @@ import androidx.compose.ui.unit.sp
 import fr.isen.fallabrinom.isensmartcompanion.Event
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.toColor
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.navigation.NavHostController
+import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
+
+val events = listOf(
+    Event(
+        id = "1",
+        title = "Gala",
+        description = "Bal dansant avec tout l'ISEN alors ramène toi dans la plus bestiale de tes tenues !",
+        date = "2025-03-25 14:30",
+        location = "ISEN Toulon",
+        category = "Gala",
+    ),
+    Event(
+        id = "2",
+        title = "Grand Bonnand",
+        description = "Description de l'événement 2",
+        date = "2025-03-26 09:00",
+        location = "Paris",
+        category = "Escape Game",
+    ),
+    Event(
+        id ="3",
+        title = "Jet-Ski",
+        description = "Description de l'événement 3",
+        date = "2025-03-27 18:00",
+        location = "Marseille bébé",
+        category = "Sport"
+
+    )
+)
+
 
 @Composable
-fun EventScreen(modifier: Modifier) {
+fun EventScreen(modifier: Modifier, navHostController: NavHostController,eventViewModel: EventViewModel) {
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
-    val events = listOf(
-        Event(
-            id = "1",
-            title = "Gala",
-            description = "Description de l'événement 1",
-            date = "2025-03-25 14:30",
-            location = "ISEN Toulon",
-            category = "Gala",
-        ),
-        Event(
-            id = "2",
-            title = "Grand Bonnand",
-            description = "Description de l'événement 2",
-            date = "2025-03-26 09:00",
-            location = "Paris",
-            category = "Escape Game",
-        ),
-        Event(
-            id ="3",
-            title = "Jet-Ski",
-            description = "Description de l'événement 3",
-            date = "2025-03-27 18:00",
-            location = "Marseille bébé",
-            category = "Sport"
+    val context = LocalContext.current // Pour afficher le Toast
 
-        )
-    )
 
     // Liste d'événements à afficher
     LazyColumn(
@@ -63,45 +84,40 @@ fun EventScreen(modifier: Modifier) {
                 event = event,
                 onAccept = {
                     // Logique pour accepter l'événement
-                    println("Accepted: ${event.title}")
+                    Toast.makeText(context, "Accepted: ${event.title}", Toast.LENGTH_SHORT).show()
+                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
                 },
                 onReject = {
                     // Logique pour rejeter l'événement
-                    println("Rejected: ${event.title}")
-                }
+                    Toast.makeText(context, "Refused: ${event.title}", Toast.LENGTH_SHORT).show()
+                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
+                },
+                navHostController
             )
         }
     }
+
 }
 
 @Composable
-fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit) {
+fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit,navHostController: NavHostController) {
+    //var expanded by remember{mutableStateOf(false)} // État pour afficher/cacher les détails
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        //elevation = 4.dp,
+        elevation = CardDefaults.cardElevation(8.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = event.id,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
             Text(
                 text = event.title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = event.description,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-
             )
             Text(
                 text = "Date: ${event.date}",
@@ -109,16 +125,6 @@ fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit) {
                 color = Color.Gray,
                 fontWeight = FontWeight.Bold
 
-            )
-            Text(
-                text = event.location,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = event.category,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -128,15 +134,26 @@ fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit) {
                     onClick = onAccept,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
                 ) {
-                    Text("Accept")
+                    Text("Accept",fontSize = 14.sp,)
                 }
                 Button(
                     onClick = onReject,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
-                    Text("Reject")
+                    Text("Reject",fontSize = 14.sp,)
+                }
+                Button(
+                    onClick = { navHostController.navigate("Event/${event.id}") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                ){
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Details",
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
+
     }
 }

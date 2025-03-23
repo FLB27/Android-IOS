@@ -2,6 +2,7 @@ package fr.isen.fallabrinom.isensmartcompanion
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -47,15 +48,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
 import fr.isen.fallabrinom.isensmartcompanion.ui.theme.ISENSmartCompanionTheme
@@ -115,6 +119,10 @@ fun API() {
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route //suit l'onglet cliqué
 
+    val eventViewModel: EventViewModel = viewModel() // Initialisation automatique du ViewModel
+    val eventCount by eventViewModel.eventCount.observeAsState(0) // Observe le nombre d'événements
+
+
     Scaffold(
         topBar = {
             Box(
@@ -150,12 +158,14 @@ fun API() {
                         Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
                     }
                 },
-                navController //on donne le navcontroller
+                navController, //on donne le navcontroller
+                eventViewModel,
+                eventCount
             )
         }
     ) {paddingValues  ->
 
-        NavGraph(navController,paddingValues) //gestion des onglets
+        NavGraph(navController,paddingValues,eventViewModel) //gestion des onglets
 
         if (currentRoute == "Home") { //permet de conditionner l'affichage des échanges de message
 
@@ -183,10 +193,14 @@ fun BottomBar(
     onMessageChange: (String) -> Unit,
     onSendClick: () -> Unit,
     navHostController: NavHostController,
+    eventViewModel: EventViewModel,
+    eventCount: Int,
 ) {
     // Définition des onglets de navigation
+
+
     val homeTab = TabBarItem("Home", Icons.Filled.Home, Icons.Outlined.Home)
-    val eventsTab = TabBarItem("Events", Icons.Filled.Notifications, Icons.Outlined.Notifications, badgeAmount = 7)
+    val eventsTab = TabBarItem("Events", Icons.Filled.Notifications, Icons.Outlined.Notifications, badgeAmount = eventCount)
     val agendaTab = TabBarItem("Calendar", Icons.Filled.DateRange, Icons.Outlined.DateRange)
     val historyTab = TabBarItem("History", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
     val tabBarItems = listOf(homeTab, eventsTab, agendaTab, historyTab)
@@ -237,7 +251,7 @@ fun BottomBar(
         }
 
         // Barre de navigation
-        TabView(tabBarItems,navController = navHostController)
+        TabView(tabBarItems,navController = navHostController,eventViewModel)
 
     }
 }
