@@ -26,7 +26,7 @@ fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , ev
         composable("History") { HistoryScreen(modifier = Modifier.padding(paddingValues)) }
         composable("Event/{eventId}") { backStackEntry -> //chemin d’accès (route) pour cette activité + 	backStackEntry contient les informations de la navigation actuelle
             val eventId = backStackEntry.arguments?.getString("eventId") ?: "" //récupérer les arguments passés dans l’URL + transformer en string l'ID
-            EventDetailsActivity(eventId, navController,modifier = Modifier.padding(paddingValues))
+            EventDetailsActivity(eventId, navController,modifier = Modifier.padding(paddingValues),eventViewModel)
         }
     }
 }

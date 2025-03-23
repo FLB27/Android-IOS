@@ -11,10 +11,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 
 
 @Composable
-fun EventDetailsActivity(eventId: String, navController: NavController, modifier: Modifier) {
+fun EventDetailsActivity(eventId: String, navController: NavController, modifier: Modifier,eventViewModel: EventViewModel) {
+    val events by eventViewModel.events.observeAsState(emptyList()) //utilisée pour observer un LiveData ou un State
+    // emptylist() est une valeur par défaut fournie au cas où les données n’ont pas encore été chargées ou sont nulles
+
     val event = events.find { it.id == eventId } // Trouve l'événement dans la liste créée dans event.kt en fonction de l'ID
 
     if (event != null) {

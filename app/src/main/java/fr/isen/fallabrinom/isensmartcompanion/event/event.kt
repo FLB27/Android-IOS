@@ -28,6 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
@@ -37,40 +38,13 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 
-val events = listOf(
-    Event(
-        id = "1",
-        title = "Gala",
-        description = "Bal dansant avec tout l'ISEN alors ramène toi dans la plus bestiale de tes tenues !",
-        date = "2025-03-25 14:30",
-        location = "ISEN Toulon",
-        category = "Gala",
-    ),
-    Event(
-        id = "2",
-        title = "Grand Bonnand",
-        description = "Description de l'événement 2",
-        date = "2025-03-26 09:00",
-        location = "Paris",
-        category = "Escape Game",
-    ),
-    Event(
-        id ="3",
-        title = "Jet-Ski",
-        description = "Description de l'événement 3",
-        date = "2025-03-27 18:00",
-        location = "Marseille bébé",
-        category = "Sport"
-
-    )
-)
-
 
 @Composable
 fun EventScreen(modifier: Modifier, navHostController: NavHostController,eventViewModel: EventViewModel) {
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
     val context = LocalContext.current // Pour afficher le Toast
 
+    val events by eventViewModel.events.observeAsState(emptyList())
 
     // Liste d'événements à afficher
     LazyColumn(
@@ -86,11 +60,14 @@ fun EventScreen(modifier: Modifier, navHostController: NavHostController,eventVi
                     // Logique pour accepter l'événement
                     Toast.makeText(context, "Accepted: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
+                    eventViewModel.removeEvent(event.id) //on supprime l'élément cliqué de l'interface
                 },
                 onReject = {
                     // Logique pour rejeter l'événement
                     Toast.makeText(context, "Refused: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
+                    eventViewModel.removeEvent(event.id)
+
                 },
                 navHostController
             )
