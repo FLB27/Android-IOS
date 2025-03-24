@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import fr.isen.fallabrinom.isensmartcompanion.Event
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 //Cette classe permet de stocker et mettre à jour le nombre d’événements non lus en temps réel
 
 class EventViewModel : ViewModel() {
-    private val _events = MutableLiveData<List<Event>>(listOf(
+   /* private val _events = MutableLiveData<List<Event>>(listOf(
         Event(
             id = "1",
             title = "Gala",
@@ -34,7 +37,22 @@ class EventViewModel : ViewModel() {
             category = "Sport"
 
         )
-    ))
+    ))*/
+    private val _events = MutableLiveData<List<Event>>() // Stocke la liste des événements
+
+    fun fetchEvents() {
+        RetrofitInstance.api.getEvents().enqueue(object : Callback<List<Event>> { //enqueue permet de faire l'action en arrière plan sans bloquer l'interface
+            override fun onResponse(call: Call<List<Event>>, response: Response<List<Event>>) {
+                if (response.isSuccessful) { // Vérifie que la réponse est OK (200)
+                    _events.value = response.body() // Met à jour les événements
+                }
+            }
+
+            override fun onFailure(call: Call<List<Event>>, t: Throwable) {
+                println("Erreur : ${t.message}") // Affiche l'erreur en cas d'échec
+            }
+        })
+    }
 
     val events: LiveData<List<Event>> = _events //classe qui encapsule des données et permet à plusieurs observateurs (comme des composants UI) de recevoir des mises à jour automatiquement lorsque les données changent
 
@@ -52,6 +70,8 @@ class EventViewModel : ViewModel() {
     fun updateEventCount(count: Int) {
         _eventCount.value = count
     }
+
+
 
 
 }
