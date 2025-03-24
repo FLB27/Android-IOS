@@ -47,6 +47,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -56,11 +57,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import fr.isen.fallabrinom.isensmartcompanion.AI.Gemini
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
 import fr.isen.fallabrinom.isensmartcompanion.ui.theme.ISENSmartCompanionTheme
-
 
 data class TabBarItem(
     val title: String,
@@ -108,8 +109,11 @@ fun CenteredBox() {
 
 @Composable
 fun API() {
-    var message by remember { mutableStateOf("") } // Message en cours d'édition
-    var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
+    var userMessage by remember { mutableStateOf("") } // Message en cours d'édition
+    //var messagesList by remember { mutableStateOf(listOf<Pair<String, Boolean>>()) } // (Message, Est-ce une réponse ?)
+
+    val geminiViewModel: Gemini = viewModel() //ajout de Gemini pour répondre aux messages
+    val chatMessages = geminiViewModel.chatMessages
 
     val context = LocalContext.current // Pour afficher le Toast
     val navController = rememberNavController()
@@ -145,13 +149,14 @@ fun API() {
         },
         bottomBar = {
             BottomBar( //fonction qui crée la navbar + insertion txt + bouton
-                message = message,
-                onMessageChange = { message = it },
+                message = userMessage,
+                onMessageChange = { userMessage = it },
                 onSendClick = {
-                    if (message.isNotBlank()) {
-                        messagesList = messagesList + (message to false) // Ajoute le message utilisateur
-                        messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse
-                        message = "" // Efface la zone de texte
+                    if (userMessage.isNotBlank()) {
+                        /*messagesList = messagesList + (message to false) // Ajoute le message utilisateur
+                        messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse*/
+                        geminiViewModel.sendMessage(userMessage)
+                        userMessage = "" // Efface la zone de texte
                         Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
                     }
                 },
@@ -174,7 +179,7 @@ fun API() {
             ) {
                 // 🔹 LISTE DES MESSAGES ENTRE L'IMAGE ET LA BARRE DE SAISIE
                 MessageList(
-                    messagesList = messagesList,
+                    messagesList = chatMessages,
                     modifier = Modifier
                         .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
                         .fillMaxWidth()
@@ -256,27 +261,41 @@ fun BottomBar(
 
 @Composable
 fun MessageList(
-    messagesList: List<Pair<String, Boolean>>,
+    messagesList: SnapshotStateList<Pair<String, String>>,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(messagesList) { (msg, isResponse) ->
-            Row(
+        items(messagesList) { (user, bot) ->
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = if (isResponse) Arrangement.End else Arrangement.Start
+                //horizontalArrangement = if (isResponse) Arrangement.End else Arrangement.Start
             ) {
                 Text(
-                    text = msg,
+                    text = "👤 $user",
+                    fontSize = 14.sp,
+                    color = Color.White,
+
+                    modifier = Modifier
+                        .background(
+                            Color.Red,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .padding(8.dp) //taille du contour du texte
+                        .align(Alignment.Start)
+                )
+                Text(
+                    text = " \uD83E\uDD16 $bot", //logo du robot
                     fontSize = 14.sp,
                     color = Color.White,
                     modifier = Modifier
                         .background(
-                            if (isResponse) Color.Red else Color.Gray,
+                            Color.Gray,
                             shape = RoundedCornerShape(10.dp)
                         )
+                        .align(Alignment.End)
                         .padding(8.dp) //taille du contour du texte
                 )
             }
