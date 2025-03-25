@@ -22,35 +22,26 @@ import fr.isen.fallabrinom.isensmartcompanion.Event
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.graphics.toColor
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
-import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 
 
 @Composable
-fun EventScreen(modifier: Modifier, navHostController: NavHostController,eventViewModel: EventViewModel) {
+fun EventScreen(
+    modifier: Modifier,
+    navHostController: NavHostController,
+    eventViewModel: EventViewModel,
+    events: List<Event>
+) {
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
     val context = LocalContext.current // Pour afficher le Toast
-
-    val events by eventViewModel.events.observeAsState(emptyList()) // Observe les données
-
-    LaunchedEffect(Unit) {
-        eventViewModel.fetchEvents() // Charge les événements au démarrage
-    }
-
 
     // Liste d'événements à afficher
     LazyColumn(
