@@ -75,7 +75,6 @@ fun EventScreen(
 
 @Composable
 fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit,navHostController: NavHostController) {
-    //var expanded by remember{mutableStateOf(false)} // État pour afficher/cacher les détails
     Card(
         modifier = Modifier
             .fillMaxWidth()

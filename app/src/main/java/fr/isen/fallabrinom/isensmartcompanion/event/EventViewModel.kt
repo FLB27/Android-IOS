@@ -39,8 +39,10 @@ class EventViewModel : ViewModel() {
 
         )
     ))*/
+
     private val _events = MutableLiveData<List<Event>>() // Stocke la liste des événements
     val events: LiveData<List<Event>> = _events //classe qui encapsule des données et permet à plusieurs observateurs (comme des composants UI) de recevoir des mises à jour automatiquement lorsque les données changent
+
     private val _eventCount = MutableLiveData<Int>(_events.value?.size ?: 0) // Initialise le compteur d'événements à la taille de la liste
     //events.value renvoie la liste d’événements stockée dans _events
     // ?.size opérateur de sécurité de nullité si size = null ça renvoie pas d'erreur car renvoie null

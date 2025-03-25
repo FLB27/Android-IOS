@@ -58,10 +58,15 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import fr.isen.fallabrinom.isensmartcompanion.AI.Gemini
+import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.History
+import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.HistoryViewModel
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
 import fr.isen.fallabrinom.isensmartcompanion.ui.theme.ISENSmartCompanionTheme
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class TabBarItem(
     val title: String,
@@ -123,6 +128,8 @@ fun API() {
     val eventViewModel: EventViewModel = viewModel() // Initialisation automatique du ViewModel
     val eventCount by eventViewModel.eventCount.observeAsState(0) // Observe le nombre d'événements
 
+    val historyViewModel: HistoryViewModel = viewModel()
+
 
     Scaffold(
         topBar = {
@@ -130,19 +137,19 @@ fun API() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Transparent),
-                    //.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)){
                     Image(
                         painter = painterResource(id = R.drawable.logo_isen),
                         contentDescription = "Logo",
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(130.dp)
                     )
                     Text(
+                        modifier = Modifier.padding(0.dp), // Supprime toute marge interne
                         text = "Smart Companion",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold ,
                     )
                 }
             }
@@ -153,9 +160,7 @@ fun API() {
                 onMessageChange = { userMessage = it },
                 onSendClick = {
                     if (userMessage.isNotBlank()) {
-                        /*messagesList = messagesList + (message to false) // Ajoute le message utilisateur
-                        messagesList = messagesList + ("Réponse automatique" to true) // Ajoute une réponse*/
-                        geminiViewModel.sendMessage(userMessage)
+                        geminiViewModel.sendMessage(userMessage,historyViewModel)
                         userMessage = "" // Efface la zone de texte
                         Toast.makeText(context, "Message envoyé!", Toast.LENGTH_SHORT).show()
                     }
@@ -167,7 +172,7 @@ fun API() {
         }
     ) {paddingValues  ->
 
-        NavGraph(navController,paddingValues,eventViewModel) //gestion des onglets
+        NavGraph(navController,paddingValues,eventViewModel,historyViewModel) //gestion des onglets
 
         if (currentRoute == "Home") { //permet de conditionner l'affichage des échanges de message
 
@@ -182,7 +187,8 @@ fun API() {
                     messagesList = chatMessages,
                     modifier = Modifier
                         .weight(1f) // ✅ Permet à la liste de messages de s'étendre entre le haut et le bas
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    historyViewModel
                 )
             }
         }
@@ -262,7 +268,8 @@ fun BottomBar(
 @Composable
 fun MessageList(
     messagesList: SnapshotStateList<Pair<String, String>>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    historyViewModel: HistoryViewModel
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
