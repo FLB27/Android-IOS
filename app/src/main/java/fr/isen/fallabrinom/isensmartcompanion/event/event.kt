@@ -1,5 +1,7 @@
 package fr.isen.fallabrinom.isensmartcompanion.event
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,14 +25,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import fr.isen.fallabrinom.isensmartcompanion.notifs.NotificationManager
+import fr.isen.fallabrinom.isensmartcompanion.notifs.cancelNotification
+import fr.isen.fallabrinom.isensmartcompanion.notifs.scheduleNotification
+//import fr.isen.fallabrinom.isensmartcompanion.notifs.cancelNotification
+//import fr.isen.fallabrinom.isensmartcompanion.notifs.scheduleNotification
+import fr.isen.fallabrinom.isensmartcompanion.notifs.sendNotification
+
+//import fr.isen.fallabrinom.isensmartcompanion.notifs.cancelNotification
+//import fr.isen.fallabrinom.isensmartcompanion.notifs.scheduleNotification
 
 
 @Composable
@@ -38,7 +53,7 @@ fun EventScreen(
     modifier: Modifier,
     navHostController: NavHostController,
     eventViewModel: EventViewModel,
-    events: List<Event>
+    events: List<Event>,
 ) {
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
     val context = LocalContext.current // Pour afficher le Toast
@@ -66,15 +81,27 @@ fun EventScreen(
                     eventViewModel.removeEvent(event.id)
 
                 },
-                navHostController
+                navHostController,
+                eventViewModel.notificationManager,
+                context
             )
         }
     }
 
 }
 
+@SuppressLint("ScheduleExactAlarm", "MissingPermission")
 @Composable
-fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit,navHostController: NavHostController) {
+fun EventBubble(
+    event: Event,
+    onAccept: () -> Unit,
+    onReject: () -> Unit,
+    navHostController: NavHostController,
+    notificationManager: NotificationManager,
+    context: Context
+) {
+    var isEnabled by remember { mutableStateOf(notificationManager.isNotificationEnabled(event.id)) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,6 +126,28 @@ fun EventBubble(event: Event, onAccept: () -> Unit, onReject: () -> Unit,navHost
                 fontWeight = FontWeight.Bold
 
             )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+                IconButton(onClick = {
+                    val newState = !isEnabled // Calcul du nouvel état avant mise à jour
+
+                    notificationManager.toggleNotification(event.id) // Met à jour l'état dans la gestion des notifs
+
+                 if (newState) {
+                        scheduleNotification(context,System.currentTimeMillis() + 10000,event.title,event.description) // Planifier la notif si activé
+                  } else {
+                        cancelNotification(context, event.id) // Annuler la notif si désactivé
+                  }
+
+
+                    isEnabled = newState // Met à jour isEnabled après l'action
+                }) {
+                    Icon(
+                        imageVector = if (isEnabled) Icons.Default.Notifications else Icons.Default.NotificationsOff,
+                        contentDescription = if (isEnabled) "Notification activée" else "Notification désactivée",
+                        tint = if (isEnabled) Color.Green else Color.Gray
+                    )
+                }
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()

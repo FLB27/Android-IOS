@@ -74,4 +74,12 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+
+    implementation("androidx.core:core-ktx:1.15.0") //API pour les notifs
+    implementation("androidx.activity:activity-compose:1.8.2")
+
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+
+
+
 }

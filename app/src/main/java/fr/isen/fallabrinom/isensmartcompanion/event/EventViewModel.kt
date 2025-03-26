@@ -1,17 +1,20 @@
 package fr.isen.fallabrinom.isensmartcompanion.event
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import fr.isen.fallabrinom.isensmartcompanion.Event
 import fr.isen.fallabrinom.isensmartcompanion.API.RetrofitInstance
+import fr.isen.fallabrinom.isensmartcompanion.notifs.NotificationManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 //Cette classe permet de stocker et mettre à jour le nombre d’événements non lus en temps réel
 
-class EventViewModel : ViewModel() {
+class EventViewModel(application: Application) : AndroidViewModel(application) {
    /* private val _events = MutableLiveData<List<Event>>(listOf(
         Event(
             id = "1",
@@ -39,6 +42,8 @@ class EventViewModel : ViewModel() {
 
         )
     ))*/
+
+    val notificationManager = NotificationManager(application) //gestion de l'environnement des notifs
 
     private val _events = MutableLiveData<List<Event>>() // Stocke la liste des événements
     val events: LiveData<List<Event>> = _events //classe qui encapsule des données et permet à plusieurs observateurs (comme des composants UI) de recevoir des mises à jour automatiquement lorsque les données changent

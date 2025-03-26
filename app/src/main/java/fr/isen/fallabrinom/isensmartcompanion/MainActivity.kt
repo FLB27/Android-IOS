@@ -1,6 +1,9 @@
 package fr.isen.fallabrinom.isensmartcompanion
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -11,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -53,20 +55,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import fr.isen.fallabrinom.isensmartcompanion.AI.Gemini
-import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.History
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.HistoryViewModel
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import fr.isen.fallabrinom.isensmartcompanion.nav.NavGraph
 import fr.isen.fallabrinom.isensmartcompanion.nav.TabView
+import fr.isen.fallabrinom.isensmartcompanion.notifs.NotificationManager
+import fr.isen.fallabrinom.isensmartcompanion.notifs.RequestNotificationPermission
+import fr.isen.fallabrinom.isensmartcompanion.notifs.createNotificationChannel
 import fr.isen.fallabrinom.isensmartcompanion.ui.theme.ISENSmartCompanionTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+
 
 data class TabBarItem(
     val title: String,
@@ -80,8 +83,11 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel(this) //génère le channel pour envoi des notifs pour cette appli
         enableEdgeToEdge()
         setContent {
+            // Demande la permission des notifs dès l'ouverture de l'écran
+            RequestNotificationPermission()
             ISENSmartCompanionTheme {
                     API()
                     Greeting()

@@ -34,7 +34,7 @@ fun HistoryScreen(viewModel: HistoryViewModel, modifier: Modifier = Modifier) {
 
     LazyColumn(modifier = modifier.fillMaxWidth()) {
         items(historyList) { historyItem -> // Assure-toi que c’est un `History`
-            HistoryItem(historyItem, onDelete = { viewModel.deleteMessage(historyItem) })
+            HistoryItem(historyItem, onDelete = { viewModel.deleteMessage(historyItem) }) //suppression de l'item indiqué
         }
     }
     Box(
