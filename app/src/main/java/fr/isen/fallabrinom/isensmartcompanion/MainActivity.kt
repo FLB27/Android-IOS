@@ -111,7 +111,6 @@ fun CenteredBox() {
     ) { Column(//sans verticalArrangement modifié on obtient l'image centrée en haut et  au milieu
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally // Centre l'image horizontalement
-
         ) {
             API()
         }

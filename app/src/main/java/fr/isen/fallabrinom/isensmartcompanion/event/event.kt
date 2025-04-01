@@ -31,6 +31,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,8 +54,10 @@ fun EventScreen(
     modifier: Modifier,
     navHostController: NavHostController,
     eventViewModel: EventViewModel,
-    events: List<Event>,
 ) {
+
+    val events by eventViewModel.events.observeAsState(emptyList())
+
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
     val context = LocalContext.current // Pour afficher le Toast
 
@@ -72,15 +75,15 @@ fun EventScreen(
                     // Logique pour accepter l'événement
                     Toast.makeText(context, "Accepted: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
-                    eventViewModel.removeEvent(event.id,event) //on supprime l'élément cliqué de l'interface
-
+                    //eventViewModel.removeEvent(event.id,event) //on supprime l'élément cliqué de l'interface
+                    eventViewModel.updateEvent(event.id,true)
                 },
                 onReject = {
                     // Logique pour rejeter l'événement
                     Toast.makeText(context, "Refused: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
-                    eventViewModel.removeEvent(event.id,event)
-
+                    //eventViewModel.removeEvent(event.id,event)
+                    eventViewModel.updateEvent(event.id,false)
                 },
                 navHostController,
                 eventViewModel.notificationManager,

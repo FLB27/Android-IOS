@@ -7,7 +7,7 @@ import fr.isen.fallabrinom.isensmartcompanion.event.EventScreen
 import fr.isen.fallabrinom.isensmartcompanion.history.HistoryScreen
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+//import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -27,15 +27,12 @@ import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , eventViewModel: EventViewModel, historyViewModel: HistoryViewModel) { //reçoit un contrôleur de navigation pour gérer les changements d’écran
     val events by eventViewModel.events.observeAsState(emptyList()) // Observe les données
 
-    LaunchedEffect(Unit) { //on charge les événements pour avoir les notifs avant de cliquer sur l'onglet lors de l'initialisation de la NavBar
-        eventViewModel.fetchEvents() // Charge les événements au démarrage
-    }
     eventViewModel.updateEventCount(events.size)
 
     NavHost(navController = navController, startDestination = "Home") {
         composable("Home"){}
         composable("Events") {
-            EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel,events) }
+            EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel) }
         composable("Calendar") { AgendaScreen(modifier = Modifier.padding(paddingValues),eventViewModel) }
         composable("History") { HistoryScreen(historyViewModel,modifier = Modifier.padding(paddingValues)) }
         composable("Event/{eventId}") { backStackEntry -> //chemin d’accès (route) pour cette activité + backStackEntry contient les informations de la navigation actuelle

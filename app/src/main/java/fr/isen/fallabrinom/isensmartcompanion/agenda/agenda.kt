@@ -2,14 +2,17 @@ package fr.isen.fallabrinom.isensmartcompanion.agenda
 
 import android.icu.util.Calendar
 import android.widget.CalendarView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,17 +20,18 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import fr.isen.fallabrinom.isensmartcompanion.Event
-import fr.isen.fallabrinom.isensmartcompanion.event.EventBubble
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
-import androidx.compose.foundation.lazy.items
-import androidx.compose.ui.Alignment
-
+import java.text.SimpleDateFormat
+import java.util.Locale
+import androidx.compose.runtime.LaunchedEffect
+import java.util.Date
 
 @Composable
 fun CalendarScreen(onDateSelected: (Long) -> Unit) {
@@ -46,29 +50,46 @@ fun CalendarScreen(onDateSelected: (Long) -> Unit) {
 
 @Composable
 fun AgendaScreen(modifier: Modifier = Modifier,viewModel: EventViewModel) {
-    var selectedDate by remember { mutableStateOf(System.currentTimeMillis()) } //on observe l'évolution de la variable de date
+    var selectedDate by remember {mutableStateOf(System.currentTimeMillis()) } //on observe l'évolution de la variable de date
 
     // Obtenir les événements acceptés via LiveData
     val events by viewModel.acceptedEvents.observeAsState(emptyList())
 
-    // Filtrer les événements selon la date sélectionnée
-    val filteredEvents = events.filter { it.date.toLongOrNull()== selectedDate }
-   // toLongOrNull() essaie de convertir la chaîne it.date en Long. Si la conversion échoue (si la chaîne n’est pas un nombre valide), cela retournera null
+    val allEvent by viewModel.events.observeAsState(emptyList())
 
-    Box(modifier.fillMaxWidth(),contentAlignment = Alignment.Center){// Centre le contenu) {
-        Column (modifier.fillMaxWidth(),horizontalAlignment = Alignment.CenterHorizontally // Centre l'image horizontalement
-        ){
-            CalendarScreen { newDate ->
-                selectedDate = newDate
-            }
 
-            LazyColumn {
-                items(filteredEvents) { event ->
-                    EventItem(event,modifier)
-                }
+    LaunchedEffect(events) {
+        println("Événements acceptés récupérés : $events")
+    }
+
+    // Formatteur pour convertir la date String en timestamp (ms)
+    val dateFormatter = SimpleDateFormat("d MMMM yyyy", Locale.FRENCH)
+
+    // ✅ Formatteur pour convertir le timestamp sélectionné en date "24 septembre 2024"
+    val selectedDateString = remember(selectedDate) {
+        dateFormatter.format(Date(selectedDate))
+    }
+
+    // Filtrer les événements en fonction de la date sélectionnée
+    val filteredEvents = events.filter { event ->
+        try {
+            event.date.trim() == selectedDateString.trim()
+        } catch (e: Exception) {
+            false // Si erreur de conversion, on ignore l'événement
+        }
+    }
+    Column (modifier.fillMaxSize(),horizontalAlignment = Alignment.CenterHorizontally // Centre l'image horizontalement
+    ){
+        CalendarScreen { newDate ->
+            selectedDate = newDate
+        }
+        LazyColumn{
+            items(filteredEvents) { event ->
+                EventItem(event,modifier)
             }
         }
     }
+
 }
 
 
@@ -78,10 +99,10 @@ fun EventItem(event: Event,modifier: Modifier) {
     Card(
         modifier
             .padding(8.dp) // Ajoute un peu d'espace autour de chaque carte
-            .fillMaxWidth(),
+            .fillMaxSize(),
         //elevation = 4.dp // Donne une légère élévation à chaque carte
     ) {
-        Column(modifier.padding(16.dp)) {
+        Column{
             // Affichage du titre de l'événement
             Text(
                 text = event.title,
@@ -91,20 +112,18 @@ fun EventItem(event: Event,modifier: Modifier) {
 
             // Affichage de la date de l'événement
             Text(
-                text = "Date: ${event.date}",
-                //style = MaterialTheme.typography.body2
+                text = event.date,
             )
 
             // Affichage de la description de l'événement
             Text(
                 text = "Description: ${event.description}",
-                //style = MaterialTheme.typography.body2
             )
 
             // Optionnel : Ajouter un bouton pour interagir avec l'événement
             Button(
                 onClick = { /* Interaction utilisateur ici, par exemple, marquer l'événement comme terminé */ },
-                modifier.padding(top = 8.dp)
+                //modifier.padding(top = 0.dp)
             ) {
                 Text("Voir les détails")
             }

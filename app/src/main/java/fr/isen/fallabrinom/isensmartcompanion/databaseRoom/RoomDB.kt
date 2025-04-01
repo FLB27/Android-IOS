@@ -8,6 +8,7 @@ import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
@@ -42,14 +43,20 @@ interface UserDao {
 //Events gestion
 @Dao //on crée les DAO donc toutes les commandes qu'on va vouloir utiliser via des méthpdes pour que la bdd nous comprenne
 interface EventDao {
-    @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
-    fun getAcceptedEvents(): Flow<List<Event>> //gère les événements qui sont acceptés
+    @Query("SELECT * FROM events") //à cette commande BDD on associe une méthode
+    fun getAllEvent(): LiveData<List<Event>> // Retourne un LiveData pour une mise à jour en temps réel
 
-    @Insert
-    suspend fun insertAllEvent(vararg event: Event)
+    @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
+    fun getAcceptedEvents(): LiveData<List<Event>> //gère les événements qui sont acceptés
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)//Permet d’écraser les anciens événements avec les nouveaux
+    suspend fun insertAllEvent(event: List<Event>)
 
     @Delete
     suspend fun deleteEvent(event: Event)
+
+    @Query("UPDATE events SET isAccepted = :isAccepted WHERE id = :eventId")
+    suspend fun updateEventAcceptance(eventId: String, isAccepted: Boolean)
 }
 
 @Database(entities = [History::class, Event::class], version = 1, exportSchema = false) //création d'une BDD de type History avec les DAO pour qu'on puisse communiquer avec
