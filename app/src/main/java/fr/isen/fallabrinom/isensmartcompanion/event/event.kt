@@ -72,13 +72,14 @@ fun EventScreen(
                     // Logique pour accepter l'événement
                     Toast.makeText(context, "Accepted: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
-                    eventViewModel.removeEvent(event.id) //on supprime l'élément cliqué de l'interface
+                    eventViewModel.removeEvent(event.id,event) //on supprime l'élément cliqué de l'interface
+
                 },
                 onReject = {
                     // Logique pour rejeter l'événement
                     Toast.makeText(context, "Refused: ${event.title}", Toast.LENGTH_SHORT).show()
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
-                    eventViewModel.removeEvent(event.id)
+                    eventViewModel.removeEvent(event.id,event)
 
                 },
                 navHostController,
@@ -154,7 +155,7 @@ fun EventBubble(
             ) {
                 Button( //accepter l'activité
                     onClick = onAccept,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
                 ) {
                     Text("Accept",fontSize = 14.sp,)
                 }

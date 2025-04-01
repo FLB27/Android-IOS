@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import fr.isen.fallabrinom.isensmartcompanion.agenda.AgendaScreen
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.HistoryViewModel
 
 
@@ -35,7 +36,7 @@ fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , ev
         composable("Home"){}
         composable("Events") {
             EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel,events) }
-        composable("Calendar") { CalendarScreen(modifier = Modifier.padding(paddingValues)) }
+        composable("Calendar") { AgendaScreen(modifier = Modifier.padding(paddingValues),eventViewModel) }
         composable("History") { HistoryScreen(historyViewModel,modifier = Modifier.padding(paddingValues)) }
         composable("Event/{eventId}") { backStackEntry -> //chemin d’accès (route) pour cette activité + backStackEntry contient les informations de la navigation actuelle
             val eventId = backStackEntry.arguments?.getString("eventId") ?: "" //récupérer les arguments passés dans l’URL + transformer en string l'ID

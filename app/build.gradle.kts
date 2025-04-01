@@ -80,6 +80,9 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
 
+    //Agenda interactif
+    implementation ("androidx.compose.ui:ui-viewbinding:1.4.0")
+
 
 
 }

@@ -2,7 +2,6 @@ package fr.isen.fallabrinom.isensmartcompanion.databaseRoom
 
 import android.content.Context
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -13,6 +12,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import fr.isen.fallabrinom.isensmartcompanion.Event
+import kotlinx.coroutines.flow.Flow
 
 @Entity
 data class History(
@@ -35,11 +36,26 @@ interface UserDao {
 
     @Query("DELETE FROM History")
      suspend fun deleteAll() // Supprimer tout l’historique
+
 }
 
-@Database(entities = [History::class], version = 1) //création d'une BDD de type History avec les DAO pour qu'on puisse communiquer avec
+//Events gestion
+@Dao //on crée les DAO donc toutes les commandes qu'on va vouloir utiliser via des méthpdes pour que la bdd nous comprenne
+interface EventDao {
+    @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
+    fun getAcceptedEvents(): Flow<List<Event>> //gère les événements qui sont acceptés
+
+    @Insert
+    suspend fun insertAllEvent(vararg event: Event)
+
+    @Delete
+    suspend fun deleteEvent(event: Event)
+}
+
+@Database(entities = [History::class, Event::class], version = 1, exportSchema = false) //création d'une BDD de type History avec les DAO pour qu'on puisse communiquer avec
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
+    abstract fun eventDao(): EventDao
 }
 
 object DatabaseManager { //on crée un singleton pour garder une seule instance partagée entre tous les composants de l’application.
@@ -59,5 +75,24 @@ object DatabaseManager { //on crée un singleton pour garder une seule instance 
         }
     }
 }
+
+/*
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL(
+            "CREATE TABLE IF NOT EXISTS `events` (
+                    `Id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `title` TEXT NOT NULL,
+                `description` TEXT NOT NULL,
+                `date` INTEGER NOT NULL,
+                `location` TEXT,
+                `isAccepted` INTEGER NOT NULL DEFAULT 0
+            )"
+        )
+    }
+}*/
+
+
+
 
 

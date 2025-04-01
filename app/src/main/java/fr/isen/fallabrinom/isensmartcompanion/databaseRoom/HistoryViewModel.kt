@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import fr.isen.fallabrinom.isensmartcompanion.Event
 import kotlinx.coroutines.launch
 
 
@@ -14,7 +15,6 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
 
     private val _history = MutableLiveData<List<History>>()
     val history: LiveData<List<History>> = dao.getAll() // LiveData réactif qui voit toutes les modifs sur la bdd  en temps réel
-
 
     // Ajouter une entrée d'historique
     fun addHistory(history: History) {
@@ -36,4 +36,7 @@ class HistoryViewModel(application: Application) : AndroidViewModel(application)
             dao.deleteAll() // Supprimer tout l'historique
         }
     }
+
+
+
 }
