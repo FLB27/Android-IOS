@@ -117,7 +117,7 @@ fun EventItem(event: Event,modifier: Modifier) {
 
             // Affichage de la description de l'événement
             Text(
-                text = "Description: ${event.description}",
+                text = event.description,
             )
 
             // Optionnel : Ajouter un bouton pour interagir avec l'événement
@@ -125,7 +125,7 @@ fun EventItem(event: Event,modifier: Modifier) {
                 onClick = { /* Interaction utilisateur ici, par exemple, marquer l'événement comme terminé */ },
                 //modifier.padding(top = 0.dp)
             ) {
-                Text("Voir les détails")
+                Text("Evènement fini")
             }
         }
     }

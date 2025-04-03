@@ -14,7 +14,6 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import fr.isen.fallabrinom.isensmartcompanion.Event
-import kotlinx.coroutines.flow.Flow
 
 @Entity
 data class History(
@@ -23,6 +22,7 @@ data class History(
     @ColumnInfo(name = "bot_message") val bot: String?,
     @ColumnInfo(name = "date") val date: String?
 )
+
 
 @Dao //on crée les DAO donc toutes les commandes qu'on va vouloir utiliser via des méthpdes pour que la bdd nous comprenne
 interface UserDao {
@@ -44,7 +44,7 @@ interface UserDao {
 @Dao //on crée les DAO donc toutes les commandes qu'on va vouloir utiliser via des méthpdes pour que la bdd nous comprenne
 interface EventDao {
     @Query("SELECT * FROM events") //à cette commande BDD on associe une méthode
-    fun getAllEvent(): LiveData<List<Event>> // Retourne un LiveData pour une mise à jour en temps réel
+    suspend fun getAllEvent(): List<Event> //Fonction suspendue pour éviter de bloquer l’UI
 
     @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
     fun getAcceptedEvents(): LiveData<List<Event>> //gère les événements qui sont acceptés
@@ -57,6 +57,9 @@ interface EventDao {
 
     @Query("UPDATE events SET isAccepted = :isAccepted WHERE id = :eventId")
     suspend fun updateEventAcceptance(eventId: String, isAccepted: Boolean)
+
+    @Query("SELECT COUNT(*) FROM events") //permet de compter le nombre d'élément présent dans la liste
+    suspend fun getEventCount(): Int
 }
 
 @Database(entities = [History::class, Event::class], version = 1, exportSchema = false) //création d'une BDD de type History avec les DAO pour qu'on puisse communiquer avec

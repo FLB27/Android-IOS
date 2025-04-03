@@ -1,11 +1,9 @@
 package fr.isen.fallabrinom.isensmartcompanion.event
 
 import android.app.Application
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import fr.isen.fallabrinom.isensmartcompanion.Event
 import fr.isen.fallabrinom.isensmartcompanion.API.RetrofitInstance
@@ -20,14 +18,15 @@ import retrofit2.Response
 
 class EventViewModel(application: Application) : AndroidViewModel(application) {
     private val db = DatabaseManager.getDatabase(application)
-    private val eventdao = db.eventDao()
+    private val dao = db.eventDao()
 
     val notificationManager = NotificationManager(application) //gestion de l'environnement des notifs
 
     private val _events = MutableLiveData<List<Event>>() // Stocke la liste des événements
-    //val events: LiveData<List<Event>> = _events //classe qui encapsule des données et permet à plusieurs observateurs (comme des composants UI) de recevoir des mises à jour automatiquement lorsque les données changent
     // LiveData qui observe la base de données
-    val events: LiveData<List<Event>> = eventdao.getAllEvent()
+    val events: LiveData<List<Event>> get() = _events // Expose une version en lecture seule des données de la classe événement indirectement liés à la bdd
+    //val events: LiveData<List<Event>> = dao.getAllEvent() // Expose une version en lecture seule
+
 
 
     private val _eventCount = MutableLiveData<Int>(_events.value?.size ?: 0) // Initialise le compteur d'événements à la taille de la liste
@@ -36,36 +35,26 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
     // ?: 0 si elle est null donc vide on renvoie 0 pour forcer
     val eventCount: LiveData<Int> get() = _eventCount
 
-    val acceptedEvents: LiveData<List<Event>> = eventdao.getAcceptedEvents()
+    val acceptedEvents: LiveData<List<Event>> = dao.getAcceptedEvents()
 
-    /*fun fetchEvents() {
-        RetrofitInstance.api.getEvents().enqueue(object : Callback<List<Event>> { //enqueue permet de faire l'action en arrière plan sans bloquer l'interface
-            override fun onResponse(call: Call<List<Event>>, response: Response<List<Event>>) {
-                if (response.isSuccessful) { // Vérifie que la réponse est OK (200)
-                    _events.value = response.body() ?: emptyList() // Met à jour les événements
-                    updateEventCount(_events.value?.size ?: 0) //Mise à jour du nombre de notifs
-                }
-            }
 
-            override fun onFailure(call: Call<List<Event>>, t: Throwable) {
-                println("Erreur : ${t.message}") // Affiche l'erreur en cas d'échec
-            }
-        })
-    }*/
-
-    init {
-        fetchEventsFromApiIfNeeded() // Charge les événements à l'initialisation uniquement
+   init {
+        fetchEventsFromApiIfNeeded() // Charge les événements à l'initialisation de la classe automatiquement et uniquement
     }
 
-    private fun fetchEventsFromApiIfNeeded() { //On vérifie si la bdd est déjà remplie
+    fun fetchEventsFromApiIfNeeded() { //On vérifie si la bdd est déjà remplie
         viewModelScope.launch {
-            val currentEvents = eventdao.getAllEvent().value // Récupère les événements en base
+            val currentEvents = dao.getEventCount() // Récupère le nombre d'events dans la bdd
+            //plus pratique de compter que récupérer une liste null car une variable LiveData est asynchrone donc elle peut ne pas avoir eu le temps de se charger et donc perturbe le process
 
-            if (currentEvents.isNullOrEmpty()) { // Vérifie si la bdd est vide
+            if (currentEvents == 0) { // Vérifie si la bdd est vide
                 fetchEventsFromApi() // Si vide, appelle l'API
+            }else {
+                _events.postValue(dao.getAllEvent()) //on attribue la liste
             }
         }
     }
+
 
     private fun fetchEventsFromApi() {
         RetrofitInstance.api.getEvents().enqueue(object : Callback<List<Event>> {
@@ -74,6 +63,8 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
                     response.body()?.let { events ->
                         viewModelScope.launch {
                             addEvent(events) // Sauvegarde les événements en base
+                            _events.value = response.body() ?: emptyList() //la variable prend la liste aussi
+                            updateEventCount(_events.value?.size ?: 0) //Mise à jour du nombre de notifs
                         }
                     }
                 }
@@ -85,11 +76,15 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
         })
     }
 
-    fun removeEvent(eventId: String, event: Event) { //removeEvent(eventId) filtre la liste et met à jour _events, ce qui déclenche un re-render de l’UI
-        _events.value = _events.value?.filter { it.id != eventId } // Supprime l'événement avec l'ID donné
-        viewModelScope.launch {
-            eventdao.deleteEvent(event)
+    fun removeEvent(eventId: String, event: Event, sup: Boolean) { //removeEvent(eventId) filtre la liste et met à jour _events, ce qui déclenche un re-render de l’UI
+
+        if (sup == true) {
+            viewModelScope.launch {
+                dao.deleteEvent(event)
+            }
         }
+        _events.postValue(_events.value?.filter { it.id != eventId }) //on filtre la liste pour que l'événement ajouté mais pas rejeté soit supprimé de l'affichage maus pas de la bdd
+         //postvalue = mettre à jour sa valeur depuis un thread en arrière-plan
     }
 
     fun updateEventCount(count: Int) {
@@ -99,13 +94,13 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addEvent(event: List<Event>) {
         viewModelScope.launch {
-            eventdao.insertAllEvent(event)
+            dao.insertAllEvent(event)
         }
     }
 
     fun updateEvent(eventId: String,value: Boolean){
         viewModelScope.launch {
-                eventdao.updateEventAcceptance(eventId,value)
+                dao.updateEventAcceptance(eventId,value)
         }
     }
 

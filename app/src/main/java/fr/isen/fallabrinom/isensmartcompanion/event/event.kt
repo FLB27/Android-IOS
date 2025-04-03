@@ -54,9 +54,10 @@ fun EventScreen(
     modifier: Modifier,
     navHostController: NavHostController,
     eventViewModel: EventViewModel,
+    events: List<Event>
 ) {
 
-    val events by eventViewModel.events.observeAsState(emptyList())
+    //val events by eventViewModel.events.observeAsState(emptyList())
 
     // Liste des événements (tu peux aussi la récupérer depuis une base de données ou une API)
     val context = LocalContext.current // Pour afficher le Toast
@@ -74,16 +75,16 @@ fun EventScreen(
                 onAccept = {
                     // Logique pour accepter l'événement
                     Toast.makeText(context, "Accepted: ${event.title}", Toast.LENGTH_SHORT).show()
-                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
-                    //eventViewModel.removeEvent(event.id,event) //on supprime l'élément cliqué de l'interface
                     eventViewModel.updateEvent(event.id,true)
+                    eventViewModel.removeEvent(event.id,event,false) //on supprime l'élément cliqué de l'interface mais pas de la bdd
+                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
                 },
                 onReject = {
                     // Logique pour rejeter l'événement
                     Toast.makeText(context, "Refused: ${event.title}", Toast.LENGTH_SHORT).show()
-                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
-                    //eventViewModel.removeEvent(event.id,event)
                     eventViewModel.updateEvent(event.id,false)
+                    eventViewModel.removeEvent(event.id,event,true)//on supprime l'élément cliqué de l'interface + de la bdd
+                    eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1)
                 },
                 navHostController,
                 eventViewModel.notificationManager,

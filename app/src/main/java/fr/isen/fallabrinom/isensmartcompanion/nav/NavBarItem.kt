@@ -25,14 +25,14 @@ import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , eventViewModel: EventViewModel, historyViewModel: HistoryViewModel) { //reçoit un contrôleur de navigation pour gérer les changements d’écran
-    val events by eventViewModel.events.observeAsState(emptyList()) // Observe les données
 
+    val events by eventViewModel.events.observeAsState(emptyList()) // Observe les données
     eventViewModel.updateEventCount(events.size)
 
     NavHost(navController = navController, startDestination = "Home") {
         composable("Home"){}
         composable("Events") {
-            EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel) }
+            EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel,events) }
         composable("Calendar") { AgendaScreen(modifier = Modifier.padding(paddingValues),eventViewModel) }
         composable("History") { HistoryScreen(historyViewModel,modifier = Modifier.padding(paddingValues)) }
         composable("Event/{eventId}") { backStackEntry -> //chemin d’accès (route) pour cette activité + backStackEntry contient les informations de la navigation actuelle
