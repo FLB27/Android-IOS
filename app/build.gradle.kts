@@ -28,20 +28,21 @@ android {
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
+
     buildFeatures {
         compose = true
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -60,29 +61,40 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     implementation("androidx.navigation:navigation-compose:2.7.5")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0") //intéhration de la librairie Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    // Import the BoM for the Firebase platform
+
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
-
-    // Add the dependency for the Vertex AI in Firebase library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation("com.google.firebase:firebase-vertexai")
-    val room_version = "2.6.1"
 
+    // Room
+    val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
 
-    implementation("androidx.core:core-ktx:1.15.0") //API pour les notifs
+    // Jetpack Compose
     implementation("androidx.activity:activity-compose:1.8.2")
-
     implementation("androidx.compose.material:material-icons-extended:1.5.0")
 
-    //Agenda interactif
-    implementation ("androidx.compose.ui:ui-viewbinding:1.4.0")
+    // Agenda interactif (Material Calendar View)
+    implementation("androidx.compose.ui:ui-viewbinding:1.4.0")
 
+    // The view calendar library for Android
+    implementation("com.kizitonwose.calendar:view:2.0.0")
 
+    // The compose calendar library for Android
+    implementation("com.kizitonwose.calendar:compose:2.0.0")
 
+    //Ajout du dernier calendrier
+    implementation ("io.github.wojciechosak:calendar:1.0.2")
+
+}
+
+// Résolution des conflits de dépendances
+configurations.all {
+    resolutionStrategy.force("androidx.core:core:1.15.0")
 }

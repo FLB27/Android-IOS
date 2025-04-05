@@ -1,26 +1,24 @@
 package fr.isen.fallabrinom.isensmartcompanion.nav
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import fr.isen.fallabrinom.isensmartcompanion.agenda.CalendarScreen
-import fr.isen.fallabrinom.isensmartcompanion.event.EventScreen
-import fr.isen.fallabrinom.isensmartcompanion.history.HistoryScreen
-
-import androidx.compose.runtime.Composable
 //import androidx.compose.runtime.LaunchedEffect
+
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import fr.isen.fallabrinom.isensmartcompanion.agenda.AgendaScreen
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.HistoryViewModel
-
-
 import fr.isen.fallabrinom.isensmartcompanion.event.EventDetailsActivity
+import fr.isen.fallabrinom.isensmartcompanion.event.EventScreen
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
+import fr.isen.fallabrinom.isensmartcompanion.history.HistoryScreen
 
 
 @Composable
@@ -33,7 +31,7 @@ fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , ev
         composable("Home"){}
         composable("Events") {
             EventScreen(modifier = Modifier.padding(paddingValues),navController,eventViewModel,events) }
-        composable("Calendar") { AgendaScreen(modifier = Modifier.padding(paddingValues),eventViewModel) }
+        composable("Calendar") { AgendaScreen(modifier = Modifier.padding(paddingValues).fillMaxSize(),eventViewModel) }
         composable("History") { HistoryScreen(historyViewModel,modifier = Modifier.padding(paddingValues)) }
         composable("Event/{eventId}") { backStackEntry -> //chemin d’accès (route) pour cette activité + backStackEntry contient les informations de la navigation actuelle
             val eventId = backStackEntry.arguments?.getString("eventId") ?: "" //récupérer les arguments passés dans l’URL + transformer en string l'ID
