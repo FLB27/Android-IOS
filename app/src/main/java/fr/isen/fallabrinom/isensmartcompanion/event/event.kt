@@ -74,6 +74,8 @@ fun EventScreen(
                     eventViewModel.updateEvent(event.id,true)
                     eventViewModel.removeEvent(event.id,event,false) //on supprime l'élément cliqué de l'interface mais pas de la bdd
                     eventViewModel.updateEventCount(eventViewModel.eventCount.value!! - 1) //on supprime une notif de non lu
+                    eventViewModel.notificationManager.toggleNotification(event.id) // Met à jour l'état dans la gestion des notifs
+                    scheduleNotification(context,System.currentTimeMillis() + 10000,event.title,event.description) // Planifier la notif si activé
                 },
                 onReject = {
                     // Logique pour rejeter l'événement

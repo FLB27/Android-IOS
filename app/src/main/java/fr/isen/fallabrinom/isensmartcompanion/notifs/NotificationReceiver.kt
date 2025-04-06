@@ -18,9 +18,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
-
-
-
+import fr.isen.fallabrinom.isensmartcompanion.MainActivity
 
 
 class NotificationReceiver : BroadcastReceiver() { //écouteur d’événements système. Il attend qu’un événement particulier se produise (ici, le déclenchement d’une alarme)
@@ -50,7 +48,6 @@ fun scheduleNotification(context: Context, eventTime: Long, title: String, messa
     )
 
     val alarmManager = context.getSystemService(AlarmManager::class.java)
-    //alarmManager.setExact(AlarmManager.RTC_WAKEUP, eventTime, pendingIntent) //RTC_WAKEUP: alarme est déclenchée en fonction de l’heure réelle et peut réveiller l’appareil s’il est en veille
     alarmManager.set(AlarmManager.RTC_WAKEUP, eventTime, pendingIntent)
 //pendingIntent: action à exécuter lorsque l’alarme est déclenchée.
 }
@@ -81,12 +78,27 @@ fun cancelNotification(context: Context, eventId: String) { //Suppression de la 
 @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
 fun sendNotification(context: Context, title: String, message: String) { //gestion de l'envoi de la notif + esthétique notif
 
+    val intent = Intent(context, MainActivity::class.java).apply { //intention pour exécuter NotificationReceiver lorsque l’heure définie arrivera.
+        putExtra("title", "Rappel d'événement: $title") //Ajoute le titre à la notif
+        putExtra("message", message)
+    }
+
+    // Crée un PendingIntent pour que l'Intent puisse être exécuté par le système au moment du clic
+    val pendingIntent: PendingIntent = PendingIntent.getActivity(
+        context,
+        0, // ID unique pour le PendingIntent
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // On met à jour si déjà existant
+    )
+
+    // Construire la notification
     val builder = NotificationCompat.Builder(context, "event_channel")
-        .setSmallIcon(R.drawable.ic_my_notifications) // Icône par défaut
+        .setSmallIcon(R.drawable.ic_my_notifications)
         .setContentTitle(title)
         .setContentText(message)
         .setPriority(NotificationCompat.PRIORITY_HIGH)
-        .setAutoCancel(true) // La notif disparaît en la cliquant
+        .setAutoCancel(true) // La notification disparaît après un clic
+        .setContentIntent(pendingIntent) // Définir le PendingIntent ici
 
     val notificationManager = NotificationManagerCompat.from(context)
     notificationManager.notify(1001, builder.build()) // ID unique pour chaque notif
