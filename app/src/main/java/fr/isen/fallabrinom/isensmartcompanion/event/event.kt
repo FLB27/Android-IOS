@@ -43,8 +43,6 @@ import fr.isen.fallabrinom.isensmartcompanion.notifs.NotificationManager
 import fr.isen.fallabrinom.isensmartcompanion.notifs.cancelNotification
 import fr.isen.fallabrinom.isensmartcompanion.notifs.scheduleNotification
 
-//import fr.isen.fallabrinom.isensmartcompanion.notifs.cancelNotification
-//import fr.isen.fallabrinom.isensmartcompanion.notifs.scheduleNotification
 
 
 @Composable

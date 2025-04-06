@@ -50,8 +50,9 @@ fun scheduleNotification(context: Context, eventTime: Long, title: String, messa
     )
 
     val alarmManager = context.getSystemService(AlarmManager::class.java)
-    alarmManager.setExact(AlarmManager.RTC_WAKEUP, eventTime, pendingIntent) //RTC_WAKEUP: alarme est déclenchée en fonction de l’heure réelle et peut réveiller l’appareil s’il est en veille
-    //pendingIntent: action à exécuter lorsque l’alarme est déclenchée.
+    //alarmManager.setExact(AlarmManager.RTC_WAKEUP, eventTime, pendingIntent) //RTC_WAKEUP: alarme est déclenchée en fonction de l’heure réelle et peut réveiller l’appareil s’il est en veille
+    alarmManager.set(AlarmManager.RTC_WAKEUP, eventTime, pendingIntent)
+//pendingIntent: action à exécuter lorsque l’alarme est déclenchée.
 }
 
 
@@ -79,6 +80,7 @@ fun cancelNotification(context: Context, eventId: String) { //Suppression de la 
 
 @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
 fun sendNotification(context: Context, title: String, message: String) { //gestion de l'envoi de la notif + esthétique notif
+
     val builder = NotificationCompat.Builder(context, "event_channel")
         .setSmallIcon(R.drawable.ic_my_notifications) // Icône par défaut
         .setContentTitle(title)
