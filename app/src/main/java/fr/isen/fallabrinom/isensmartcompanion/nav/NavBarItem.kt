@@ -3,6 +3,8 @@ package fr.isen.fallabrinom.isensmartcompanion.nav
 //import androidx.compose.runtime.LaunchedEffect
 
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import fr.isen.fallabrinom.isensmartcompanion.history.HistoryScreen
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NavGraph(navController: NavHostController, paddingValues: PaddingValues , eventViewModel: EventViewModel, historyViewModel: HistoryViewModel) { //reçoit un contrôleur de navigation pour gérer les changements d’écran
 

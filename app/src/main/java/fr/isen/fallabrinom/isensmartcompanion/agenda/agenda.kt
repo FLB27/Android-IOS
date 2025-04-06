@@ -14,12 +14,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -30,11 +29,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,13 +61,11 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
 import kotlinx.datetime.toLocalDateTime
 import java.util.Locale
 import kotlinx.datetime.*
-import kotlinx.datetime.format.DateTimeFormat
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 
 // Définir INITIAL_PAGE_INDEX comme constante
@@ -86,6 +86,7 @@ fun HorizontalCalendarView(
     calendarAnimator: CalendarAnimator = CalendarAnimator(startDate),
     markedDates: List<LocalDate>, //dates attachées aux events
     onDateSelected: (Long) -> Unit, // Callback pour la sélection de la date
+    eventViewModel: EventViewModel,
     calendarView: @Composable (monthOffset: Int) -> Unit = { monthOffset ->
         val convertedDate = Instant.fromEpochMilliseconds(newDate)
             .toLocalDateTime(TimeZone.currentSystemDefault())
@@ -105,13 +106,13 @@ fun HorizontalCalendarView(
                                 else -> Color.Transparent  //Autre jour
                             }
                         )
-                        .clickable {// Convertir la date au format millisecondes et la passer au callback
-                            val selectedDateMillis = dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-                            onDateSelected(selectedDateMillis)  // Met à jour la date sélectionnée lors du clic
+                        .clickable {
+                            val selectedDateMillis = dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()// Convertir la date au format millisecondes
+                            onDateSelected(selectedDateMillis)  // Met à jour la date locale par la date sélectionnée lors du clic
                         }, // Met à jour la date sélectionnée lors du clic
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(dayState.date.dayOfMonth.toString())
+                    Text(dayState.date.dayOfMonth.toString()) //le numéro de chaque jour
                 }
             },
             config = rememberCalendarState(startDate = startDate, monthOffset = monthOffset)
@@ -163,8 +164,48 @@ fun HorizontalCalendarView(
             val index = it - INITIAL_PAGE_INDEX
             calendarView(index)
         }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.End // Place à gauche
+        ) {
+            var showDialog by remember { mutableStateOf(false) }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    onClick = { showDialog = true },
+                    modifier = Modifier
+                        .background(Color(0xFF1976D2), shape = CircleShape) // Couleur bleue et fond rond
+                        .size(56.dp) // Taille du fond rond
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add",
+                        tint = Color.White // Couleur de l’icône
+                    )
+                    if (showDialog) {
+                        AddEventDialog(
+                            onDismiss = { showDialog = false }, //action à réaliser si on ferme ou on clique à côté de la boîte de dialogue (ici fermeture de la boîte de dialogue)
+                            onAddEvent = { event -> //on lui indique que ce paramètre onAddEvent va pouvoir utiliser la fonction addEvent sur un événement qu'il va créer
+                                eventViewModel.addOneEvent(event) //ajout d'un seul event
+                                showDialog = false
+                            }
+                        )
+                    }
+                }
+                Text("Add", modifier = Modifier.padding(top = 4.dp))
+            }
+        }
+
+
+
+        }
     }
-}
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -218,7 +259,8 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel) {
             newDate = selectedDate,
             calendarAnimator = calendarAnimator.value,
             markedDates = markedDates,
-            onDateSelected = { newSelectedDate -> selectedDate = newSelectedDate }
+            onDateSelected = { newSelectedDate -> selectedDate = newSelectedDate },
+            eventViewModel = eventViewModel //on lui passe notre viexModel pour l'évènement
         )
 
         if (filteredEvents.isEmpty()) {
@@ -229,7 +271,7 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel) {
                 verticalArrangement = Arrangement.spacedBy(0.dp) // Espacement entre les éléments de la LazyColumn
             ) {
                 items(filteredEvents) { event ->
-                    EventItem(event,modifier)
+                    EventItem(event,modifier,eventViewModel)
                 }
             }
         }
@@ -240,7 +282,7 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel) {
 
 
 @Composable
-fun EventItem(event: Event,modifier: Modifier) {
+fun EventItem(event: Event, modifier: Modifier, eventViewModel: EventViewModel) {
     // Affichage sous forme de carte (Card) pour chaque événement
     Card(
         modifier
@@ -268,11 +310,58 @@ fun EventItem(event: Event,modifier: Modifier) {
 
             // Optionnel : Ajouter un bouton pour interagir avec l'événement
             Button(
-                onClick = { /* Interaction utilisateur ici, par exemple, marquer l'événement comme terminé */ },
-                //modifier.padding(top = 0.dp)
+                onClick = {eventViewModel.removeEvent(event.id,event,true)} //on le vire de la bdd
             ) {
                 Text("Evènement fini")
             }
         }
     }
+}
+
+
+@Composable
+fun AddEventDialog(
+    onDismiss: () -> Unit, //paramètre pour gérer si on quitte la pop-up
+    onAddEvent: (Event) -> Unit //peut utiliser addEvent du coup
+) {
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf("") } // à adapter si tu veux un vrai date picker
+    var category by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        confirmButton = { //si on ajoute l'event
+            Button(onClick = {
+                val newEvent = Event(
+                    id = UUID.randomUUID().toString(), // ou autre selon ta logique
+                    title = title,
+                    description = description,
+                    location = location,
+                    date = date,
+                    category = category,
+                    isAccepted = true //mise par défaut à true pour qu'il s'affiche direct
+                )
+                onAddEvent(newEvent)
+            }) {
+                Text("Ajouter")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = { onDismiss() }) {
+                Text("Annuler")
+            }
+        },
+        title = { Text("Nouvel événement") },
+        text = { //champs à renseigner
+            Column {
+                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Titre") })
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
+                OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Lieu") })
+                OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date (ex: 06 avril 2025)") })
+                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Catégorie") })
+            }
+        }
+    )
 }

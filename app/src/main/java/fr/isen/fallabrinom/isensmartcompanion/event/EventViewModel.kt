@@ -50,7 +50,7 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
             if (currentEvents == 0) { // Vérifie si la bdd est vide
                 fetchEventsFromApi() // Si vide, appelle l'API
             }else {
-                _events.postValue(dao.getAllEvent()) //on attribue la liste
+                _events.postValue(dao.getUnAcceptedEvents()) //on attribue la liste
             }
         }
     }
@@ -95,6 +95,12 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
     fun addEvent(event: List<Event>) {
         viewModelScope.launch {
             dao.insertAllEvent(event)
+        }
+    }
+
+    fun addOneEvent(event: Event){
+        viewModelScope.launch {
+            dao.insertOneEvent(event)
         }
     }
 

@@ -49,8 +49,14 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
     fun getAcceptedEvents(): LiveData<List<Event>> //gère les événements qui sont acceptés
 
+    @Query("SELECT * FROM events WHERE isAccepted = 0 ORDER BY date ASC")
+    suspend fun getUnAcceptedEvents(): List<Event> //gère les événements qui sont pas acceptés
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)//Permet d’écraser les anciens événements avec les nouveaux
     suspend fun insertAllEvent(event: List<Event>)
+
+    @Insert
+    suspend fun insertOneEvent(event: Event)
 
     @Delete
     suspend fun deleteEvent(event: Event)
@@ -60,6 +66,8 @@ interface EventDao {
 
     @Query("SELECT COUNT(*) FROM events") //permet de compter le nombre d'élément présent dans la liste
     suspend fun getEventCount(): Int
+
+
 }
 
 @Database(entities = [History::class, Event::class], version = 1, exportSchema = false) //création d'une BDD de type History avec les DAO pour qu'on puisse communiquer avec
