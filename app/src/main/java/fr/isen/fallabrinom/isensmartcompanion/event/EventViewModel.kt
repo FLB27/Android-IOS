@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import fr.isen.fallabrinom.isensmartcompanion.Event
 import fr.isen.fallabrinom.isensmartcompanion.API.RetrofitInstance
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.DatabaseManager
+import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.History
 import fr.isen.fallabrinom.isensmartcompanion.notifs.NotificationManager
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -26,6 +27,8 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
     // LiveData qui observe la base de données
     val events: LiveData<List<Event>> get() = _events // Expose une version en lecture seule des données de la classe événement indirectement liés à la bdd
     //val events: LiveData<List<Event>> = dao.getAllEvent() // Expose une version en lecture seule
+
+    val allevents: LiveData<List<Event>> = dao.getAllEvent()
 
 
 
@@ -107,6 +110,18 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
     fun updateEvent(eventId: String,value: Boolean){
         viewModelScope.launch {
                 dao.updateEventAcceptance(eventId,value)
+        }
+    }
+
+    fun getAll (){
+        viewModelScope.launch {
+            dao.getAllEvent()
+        }
+    }
+
+    fun getAllAccepted (){
+        viewModelScope.launch {
+            dao.getAcceptedEvents()
         }
     }
 

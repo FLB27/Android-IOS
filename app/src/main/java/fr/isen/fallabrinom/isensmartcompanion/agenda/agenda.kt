@@ -29,10 +29,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -49,9 +50,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import fr.isen.fallabrinom.isensmartcompanion.AI.Gemini
 import fr.isen.fallabrinom.isensmartcompanion.Event
 import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import io.wojciechosak.calendar.animation.CalendarAnimator
@@ -107,7 +110,9 @@ fun HorizontalCalendarView(
                             }
                         )
                         .clickable {
-                            val selectedDateMillis = dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault()).toEpochMilliseconds()// Convertir la date au format millisecondes
+                            val selectedDateMillis =
+                                dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault())
+                                    .toEpochMilliseconds()// Convertir la date au format millisecondes
                             onDateSelected(selectedDateMillis)  // Met à jour la date locale par la date sélectionnée lors du clic
                         }, // Met à jour la date sélectionnée lors du clic
                     contentAlignment = Alignment.Center
@@ -127,7 +132,9 @@ fun HorizontalCalendarView(
         // Bar de navigation pour changer de mois
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             // Bouton précédent
             IconButton(onClick = { page = -1 }) {
@@ -169,7 +176,7 @@ fun HorizontalCalendarView(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.End // Place à gauche
+            horizontalArrangement = Arrangement.End // Place à droite
         ) {
             var showDialog by remember { mutableStateOf(false) }
 
@@ -177,7 +184,7 @@ fun HorizontalCalendarView(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 IconButton(
-                    onClick = { showDialog = true },
+                    onClick = {  },
                     modifier = Modifier
                         .background(Color(0xFF1976D2), shape = CircleShape) // Couleur bleue et fond rond
                         .size(56.dp) // Taille du fond rond
@@ -201,16 +208,46 @@ fun HorizontalCalendarView(
             }
         }
 
+        Row(
+            modifier = modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start // Place à droite
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                var showDialog by remember { mutableStateOf(false) }
 
+                IconButton(
+                    onClick = { showDialog = true },
+                    modifier = Modifier
+                        .size(56.dp) // Taille du fond rond
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.Help,
+                        contentDescription = "AI assistance",
+                        tint = Color.Blue // Couleur de l’icône
+                    )
+                    // Affichage de l'analyse de l'IA lorsque `showAnalysis` est vrai
+                    if (showDialog) {
+                        analyzeWithAI(eventViewModel) {
+                            showDialog = false
+                        } // Appel de la fonction @Composable
+                    }
+                }
+                Text("AI Planning Assistant", fontSize = 10.sp)//, modifier = Modifier.padding(top = 4.dp))
+            }
 
         }
+
     }
+}
 
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel) {
+fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel,navHostController: NavHostController) {
     val currentDate: LocalDate =
         Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 
@@ -263,61 +300,19 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel) {
             eventViewModel = eventViewModel //on lui passe notre viexModel pour l'évènement
         )
 
-        if (filteredEvents.isEmpty()) {
-            Text("Aucun événement ce jour.")
-        } else {
+        if (filteredEvents.isNotEmpty()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(0.dp) // Espacement entre les éléments de la LazyColumn
             ) {
                 items(filteredEvents) { event ->
-                    EventItem(event,modifier,eventViewModel)
+                    navHostController.navigate("Event/${event.id}")
+                    //EventItem(event,modifier,eventViewModel)
                 }
             }
         }
     }
 }
-
-
-
-
-@Composable
-fun EventItem(event: Event, modifier: Modifier, eventViewModel: EventViewModel) {
-    // Affichage sous forme de carte (Card) pour chaque événement
-    Card(
-        modifier
-            //.padding(8.dp) // Ajoute un peu d'espace autour de chaque carte
-            .fillMaxSize(),
-        //elevation = 4.dp // Donne une légère élévation à chaque carte
-    ) {
-        Column{
-            // Affichage du titre de l'événement
-            Text(
-                text = event.title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            // Affichage de la date de l'événement
-            Text(
-                text = event.date,
-            )
-
-            // Affichage de la description de l'événement
-            Text(
-                text = event.description,
-            )
-
-            // Optionnel : Ajouter un bouton pour interagir avec l'événement
-            Button(
-                onClick = {eventViewModel.removeEvent(event.id,event,true)} //on le vire de la bdd
-            ) {
-                Text("Evènement fini")
-            }
-        }
-    }
-}
-
 
 @Composable
 fun AddEventDialog(
@@ -361,6 +356,66 @@ fun AddEventDialog(
                 OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Lieu") })
                 OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date (ex: 06 avril 2025)") })
                 OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Catégorie") })
+            }
+        }
+    )
+}
+
+
+
+@Composable
+fun analyzeWithAI(eventViewModel: EventViewModel,onFinished: () -> Unit){ // onFinished <- fonction prédéfinie Callback une fois l’analyse finie
+
+    val geminiViewModel: Gemini = viewModel() //ajout de Gemini pour répondre aux messages
+    val events by eventViewModel.acceptedEvents.observeAsState(emptyList())
+
+    val formattedEvents =
+        events.joinToString("\n") { //concaténation et formatage des données pour une bonne compréhension de la part de l'IA
+            "• ${it.title} le ${it.date} à ${it.date} (${it.category})"
+        }
+
+
+    val prompt = """
+        Voici mon agenda :
+        $formattedEvents
+
+        Est-ce que mon emploi du temps est trop chargé ?
+        """.trimIndent() //permet de supprimer l'indentation du message
+
+    var aiResponse by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+
+    geminiViewModel.analysePlanning(prompt) { result ->
+        aiResponse = result
+        showDialog = true
+    }
+
+    if (showDialog) {
+        showAdviceDialog(
+            aiResponse = aiResponse,
+            onDismiss = { showDialog = false }
+        )
+    }
+
+
+}
+
+@Composable
+fun showAdviceDialog(
+    aiResponse: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Conseil de l'Assistant IA")
+        },
+        text = {
+            Text(text = aiResponse)
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Fermer")
             }
         }
     )

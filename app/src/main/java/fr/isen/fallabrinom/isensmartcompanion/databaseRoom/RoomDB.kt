@@ -44,7 +44,7 @@ interface UserDao {
 @Dao //on crée les DAO donc toutes les commandes qu'on va vouloir utiliser via des méthpdes pour que la bdd nous comprenne
 interface EventDao {
     @Query("SELECT * FROM events") //à cette commande BDD on associe une méthode
-    suspend fun getAllEvent(): List<Event> //Fonction suspendue pour éviter de bloquer l’UI
+    fun getAllEvent(): LiveData<List<Event>> //Fonction suspendue pour éviter de bloquer l’UI
 
     @Query("SELECT * FROM events WHERE isAccepted = 1 ORDER BY date ASC")
     fun getAcceptedEvents(): LiveData<List<Event>> //gère les événements qui sont acceptés

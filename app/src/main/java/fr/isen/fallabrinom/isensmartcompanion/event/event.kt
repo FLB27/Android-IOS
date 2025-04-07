@@ -5,6 +5,7 @@ package fr.isen.fallabrinom.isensmartcompanion.event
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -109,8 +110,9 @@ fun EventBubble(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
-        elevation = CardDefaults.cardElevation(8.dp),
-        shape = RoundedCornerShape(8.dp)
+        //elevation = CardDefaults.cardElevation(8.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(Color.Blue.copy(alpha = 0.1f))
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -157,19 +159,19 @@ fun EventBubble(
             ) {
                 Button( //accepter l'activité
                     onClick = onAccept,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue.copy(alpha = 0.7f))
                 ) {
-                    Text("Accept",fontSize = 14.sp,)
+                    Text("Add to Calendar",fontSize = 10.sp,)
                 }
                 Button(
                     onClick = onReject,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.7f))
                 ) {
-                    Text("Reject",fontSize = 14.sp,)
+                    Text("Delete",fontSize = 10.sp,)
                 }
                 Button(
                     onClick = { navHostController.navigate("Event/${event.id}") },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black.copy(alpha = 0.7f))
                 ){
                     Icon(
                         imageVector = Icons.Filled.Add,

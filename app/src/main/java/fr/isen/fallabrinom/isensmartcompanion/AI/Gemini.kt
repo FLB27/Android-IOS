@@ -1,13 +1,19 @@
 package fr.isen.fallabrinom.isensmartcompanion.AI
 
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.ai.client.generativeai.GenerativeModel
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.History
 import fr.isen.fallabrinom.isensmartcompanion.databaseRoom.HistoryViewModel
+import fr.isen.fallabrinom.isensmartcompanion.event.EventViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,4 +48,19 @@ class Gemini : ViewModel() {
             }
         }
     }
+
+    fun analysePlanning(prompt: String, onResult: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) { //coroutine dans le viewModelScope, gérer les tâches asynchrones de manière sécurisée (elles seront annulées automatiquement lorsque le ViewModel sera détruit
+            try {
+                val response = generativeModel.generateContent(prompt)
+                withContext(Dispatchers.Main) { //revenir sur le thread principal (Dispatchers.Main) pour mettre à jour l’UI ou exécuter des actions qui touchent l’interface utilisateur
+                    onResult(response.text.toString()) // Passe la réponse de l'IA au callback
+                }
+
+            } catch (e: Exception) {}
+        }
+    }
+
+
+
 }
