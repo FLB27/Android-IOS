@@ -379,7 +379,8 @@ fun analyzeWithAI(eventViewModel: EventViewModel,onFinished: () -> Unit){ // onF
         Voici mon agenda :
         $formattedEvents
 
-        Est-ce que mon emploi du temps est trop chargé ?
+        Voici mon planning depuis l'année dernière, peux-tu me dire si j'ai besoin de repos ? 
+        Réponds moi avec une réponse simple, courte et claire stp
         """.trimIndent() //permet de supprimer l'indentation du message
 
     var aiResponse by remember { mutableStateOf("") }
