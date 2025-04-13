@@ -50,14 +50,13 @@ class Gemini : ViewModel() {
     }
 
     fun analysePlanning(prompt: String, onResult: (String) -> Unit) {
-        viewModelScope.launch(Dispatchers.IO) { //coroutine dans le viewModelScope, gérer les tâches asynchrones de manière sécurisée (elles seront annulées automatiquement lorsque le ViewModel sera détruit
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = generativeModel.generateContent(prompt)
-                withContext(Dispatchers.Main) { //revenir sur le thread principal (Dispatchers.Main) pour mettre à jour l’UI ou exécuter des actions qui touchent l’interface utilisateur
-                    onResult(response.text.toString()) // Passe la réponse de l'IA au callback
-                }
-
-            } catch (e: Exception) {}
+                onResult(response.text ?: "Aucune réponse")
+            } catch (e: Exception) {
+                onResult("Erreur lors de l'analyse")
+            }
         }
     }
 

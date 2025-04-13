@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.room.util.TableInfo
 
 
 @Composable
@@ -43,10 +44,12 @@ fun EventDetailsActivity(eventId: String, navController: NavController, modifier
             }
         }
     } else {
-        Text("Événement non trouvé", fontSize = 18.sp, modifier = modifier.padding(8.dp))
-        Row(horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(onClick = { navController.popBackStack() }) { // popBackStack() permet de revenir à l’écran précédent
-                Text("Retour")
+        Column(modifier = modifier.padding(8.dp)) {
+            Text("Événement non trouvé", fontSize = 18.sp)
+            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(onClick = { navController.popBackStack() }) { // popBackStack() permet de revenir à l’écran précédent
+                    Text("Retour")
+                }
             }
         }
     }

@@ -67,6 +67,9 @@ interface EventDao {
     @Query("SELECT COUNT(*) FROM events") //permet de compter le nombre d'élément présent dans la liste
     suspend fun getEventCount(): Int
 
+    @Query("SELECT COUNT(*) FROM events WHERE isAccepted = 0") //permet de compter le nombre d'élément présent dans la liste
+    suspend fun getUnAcceptedEventCount(): Int
+
 
 }
 

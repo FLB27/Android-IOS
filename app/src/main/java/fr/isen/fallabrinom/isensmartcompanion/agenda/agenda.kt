@@ -97,11 +97,13 @@ fun HorizontalCalendarView(
         CalendarView(
             day = { dayState ->
                 val isMarked = markedDates.contains(dayState.date) //si une des dates de la liste concorde avec celle du tableau
+
                 Box(
                     modifier = modifier
                         .padding(4.dp)
                         .aspectRatio(1f)
                         .clip(CircleShape)
+
                         .background(
                             when {
                                 dayState.date == convertedDate.date -> Color.Blue.copy(alpha = 0.4f)  // Date du jour
@@ -109,12 +111,16 @@ fun HorizontalCalendarView(
                                 else -> Color.Transparent  //Autre jour
                             }
                         )
+
                         .clickable {
                             val selectedDateMillis =
                                 dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault())
                                     .toEpochMilliseconds()// Convertir la date au format millisecondes
+
+                            onDateSelected(-1L) // Forcer un changement (valeur bidon)
                             onDateSelected(selectedDateMillis)  // Met à jour la date locale par la date sélectionnée lors du clic
                         }, // Met à jour la date sélectionnée lors du clic
+
                     contentAlignment = Alignment.Center
                 ) {
                     Text(dayState.date.dayOfMonth.toString()) //le numéro de chaque jour
@@ -184,7 +190,7 @@ fun HorizontalCalendarView(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 IconButton(
-                    onClick = {  },
+                    onClick = { showDialog = true },
                     modifier = Modifier
                         .background(Color(0xFF1976D2), shape = CircleShape) // Couleur bleue et fond rond
                         .size(56.dp) // Taille du fond rond
@@ -364,42 +370,48 @@ fun AddEventDialog(
 
 
 @Composable
-fun analyzeWithAI(eventViewModel: EventViewModel,onFinished: () -> Unit){ // onFinished <- fonction prédéfinie Callback une fois l’analyse finie
-
-    val geminiViewModel: Gemini = viewModel() //ajout de Gemini pour répondre aux messages
+fun analyzeWithAI(
+    eventViewModel: EventViewModel,
+    onFinished: () -> Unit // <- Callback une fois l’analyse finie
+) {
+    val geminiViewModel: Gemini = viewModel()
     val events by eventViewModel.acceptedEvents.observeAsState(emptyList())
 
-    val formattedEvents =
-        events.joinToString("\n") { //concaténation et formatage des données pour une bonne compréhension de la part de l'IA
-            "• ${it.title} le ${it.date} à ${it.date} (${it.category})"
-        }
-
+    val formattedEvents = events.joinToString("\n") {
+        "• ${it.title} le ${it.date},(${it.category})"
+    }
 
     val prompt = """
         Voici mon agenda :
         $formattedEvents
 
-        Voici mon planning depuis l'année dernière, peux-tu me dire si j'ai besoin de repos ? 
-        Réponds moi avec une réponse simple, courte et claire stp
-        """.trimIndent() //permet de supprimer l'indentation du message
+        Ai-je besoin de repos ou d'équilibre ?
+        Fais moi une réponse courte et concrète stp.
+    """.trimIndent()
 
-    var aiResponse by remember { mutableStateOf("") }
-    var showDialog by remember { mutableStateOf(false) }
+    var aiResponse by remember { mutableStateOf<String?>(null) }
 
-    geminiViewModel.analysePlanning(prompt) { result ->
-        aiResponse = result
-        showDialog = true
+    // Appel à l'IA
+    LaunchedEffect(prompt) {
+        geminiViewModel.analysePlanning(prompt) { result ->
+            aiResponse = result
+        }
     }
 
-    if (showDialog) {
+    // Affichage du résultat Si aiResponse n’est pas nul
+    aiResponse?.let { response ->
         showAdviceDialog(
-            aiResponse = aiResponse,
-            onDismiss = { showDialog = false }
+            aiResponse = response,
+            onDismiss = {
+                aiResponse = null // Nettoyage
+                onFinished() // <- Indique que l'affichage est fini
+            }
         )
     }
-
-
 }
+
+
+
 
 @Composable
 fun showAdviceDialog(

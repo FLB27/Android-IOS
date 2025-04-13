@@ -47,7 +47,8 @@ class EventViewModel(application: Application) : AndroidViewModel(application) {
 
     fun fetchEventsFromApiIfNeeded() { //On vérifie si la bdd est déjà remplie
         viewModelScope.launch {
-            val currentEvents = dao.getEventCount() // Récupère le nombre d'events dans la bdd
+            //val currentEvents = dao.getEventCount() // Récupère le nombre d'events dans la bdd
+            val currentEvents = dao.getUnAcceptedEventCount()
             //plus pratique de compter que récupérer une liste null car une variable LiveData est asynchrone donc elle peut ne pas avoir eu le temps de se charger et donc perturbe le process
 
             if (currentEvents == 0) { // Vérifie si la bdd est vide
