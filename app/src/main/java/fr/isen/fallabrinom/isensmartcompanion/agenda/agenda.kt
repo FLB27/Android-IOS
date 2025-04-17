@@ -31,7 +31,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -39,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,6 +67,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.util.Locale
 import kotlinx.datetime.*
+import kotlinx.datetime.LocalDateTime.Companion
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -90,14 +91,18 @@ fun HorizontalCalendarView(
     markedDates: List<LocalDate>, //dates attachées aux events
     onDateSelected: (Long) -> Unit, // Callback pour la sélection de la date
     eventViewModel: EventViewModel,
-    calendarView: @Composable (monthOffset: Int) -> Unit = { monthOffset ->
+    navHostController: NavHostController,
+    event: List<Event>,
+    calendarView: @Composable ((Int) -> Unit) = { monthOffset ->
         val convertedDate = Instant.fromEpochMilliseconds(newDate)
-            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .toLocalDateTime(TimeZone.currentSystemDefault());
 
         CalendarView(
             day = { dayState ->
                 val isMarked = markedDates.contains(dayState.date) //si une des dates de la liste concorde avec celle du tableau
-
+                var showEventChooser by remember { mutableStateOf(false) }
+                var eventsForSelectedDate by remember { mutableStateOf<List<Event>>(emptyList()) }
+                // Au début de ta fonction
                 Box(
                     modifier = modifier
                         .padding(4.dp)
@@ -117,13 +122,62 @@ fun HorizontalCalendarView(
                                 dayState.date.atStartOfDayIn(TimeZone.currentSystemDefault())
                                     .toEpochMilliseconds()// Convertir la date au format millisecondes
 
-                            onDateSelected(-1L) // Forcer un changement (valeur bidon)
-                            onDateSelected(selectedDateMillis)  // Met à jour la date locale par la date sélectionnée lors du clic
+                            val selectedDate = Instant.fromEpochMilliseconds(selectedDateMillis)
+                                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+                            val eventFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)
+
+                            val filteredEvents = event.filter {
+                                try {
+                                    val eventDate = java.time.LocalDate.parse(it.date, eventFormatter)
+                                    eventDate == selectedDate.toJavaLocalDate()
+                                } catch (e: Exception) {
+                                    false
+                                }
+                            }
+
+                            when (filteredEvents.size) {
+                                1 -> { //si un seul event à la date on affiche que lui
+                                    navHostController.navigate("Event/${filteredEvents.first().id}")
+                                }
+                                in 2..Int.MAX_VALUE -> { //si plus d'un event on affiche une boite de dialogue
+                                    eventsForSelectedDate = filteredEvents
+                                    showEventChooser = true
+                                }
+                            }
+
                         }, // Met à jour la date sélectionnée lors du clic
 
                     contentAlignment = Alignment.Center
                 ) {
                     Text(dayState.date.dayOfMonth.toString()) //le numéro de chaque jour
+                }
+                if (showEventChooser) {
+                    AlertDialog(
+                        onDismissRequest = { showEventChooser = false },
+                        title = { Text("Événements à cette date") },
+                        text = {
+                            Column {
+                                eventsForSelectedDate.forEach { eventItem ->
+                                    Text(
+                                        text = eventItem.title,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                navHostController.navigate("Event/${eventItem.id}")
+                                                showEventChooser = false
+                                            }
+                                            .padding(8.dp)
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { showEventChooser = false }) {
+                                Text("Fermer")
+                            }
+                        }
+                    )
                 }
             },
             config = rememberCalendarState(startDate = startDate, monthOffset = monthOffset)
@@ -133,6 +187,7 @@ fun HorizontalCalendarView(
     // Utilisation de mutableStateOf pour gérer l'état de la page
     var page by remember { mutableStateOf(0) } // 0 pour page précédente, 1 pour page suivante
     var monthOffset by remember { mutableStateOf(0) } // Initialement, le mois courant (0)
+
 
     Column {
         // Bar de navigation pour changer de mois
@@ -247,6 +302,8 @@ fun HorizontalCalendarView(
         }
 
     }
+
+
 }
 
 
@@ -265,11 +322,6 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel,navHostContr
     // Animation calendrier
     val calendarAnimator = remember { mutableStateOf(CalendarAnimator(currentDate)) }
 
-    // Conversion de la date sélectionnée en LocalDate
-    val selectedLocalDate = Instant.fromEpochMilliseconds(selectedDate)
-        .toLocalDateTime(TimeZone.currentSystemDefault())
-        .date //	selectedLocalDate : C’est la date que tu sélectionnes, par exemple en cliquant sur une date dans le calendrier.
-
     // Conversion des dates des événements en LocalDate
     val markedDates: List<LocalDate> = validevents.mapNotNull { event ->
         try {
@@ -278,17 +330,6 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel,navHostContr
             LocalDate(eventDate.year, eventDate.monthValue, eventDate.dayOfMonth)
         } catch (e: Exception) {
             null
-        }
-    }
-
-    // Filtrer les événements à la date sélectionnée
-    val filteredEvents = validevents.filter {
-        try {
-            val eventFormatter = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.FRENCH)
-            val eventDate = java.time.LocalDate.parse(it.date, eventFormatter)
-            LocalDate(eventDate.year, eventDate.monthValue, eventDate.dayOfMonth) == selectedLocalDate
-        } catch (e: Exception) {
-            false
         }
     }
 
@@ -303,20 +344,11 @@ fun AgendaScreen(modifier: Modifier, eventViewModel: EventViewModel,navHostContr
             calendarAnimator = calendarAnimator.value,
             markedDates = markedDates,
             onDateSelected = { newSelectedDate -> selectedDate = newSelectedDate },
-            eventViewModel = eventViewModel //on lui passe notre viexModel pour l'évènement
+            eventViewModel = eventViewModel, //on lui passe notre viexModel pour l'évènement
+            navHostController = navHostController,
+            event = validevents
         )
 
-        if (filteredEvents.isNotEmpty()) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(0.dp) // Espacement entre les éléments de la LazyColumn
-            ) {
-                items(filteredEvents) { event ->
-                    navHostController.navigate("Event/${event.id}")
-                    //EventItem(event,modifier,eventViewModel)
-                }
-            }
-        }
     }
 }
 

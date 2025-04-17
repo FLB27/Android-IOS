@@ -129,7 +129,6 @@ fun EventBubble(
                 fontSize = 12.sp,
                 color = Color.Gray,
                 fontWeight = FontWeight.Bold
-
             )
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
                 IconButton(onClick = {
