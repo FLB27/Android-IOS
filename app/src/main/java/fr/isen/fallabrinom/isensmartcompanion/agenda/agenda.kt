@@ -269,19 +269,16 @@ fun HorizontalCalendarView(
             }
         }
 
-        Row(
-            modifier = modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start // Place à droite
-        ) {
+
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier
             ) {
                 var showDialog by remember { mutableStateOf(false) }
 
                 IconButton(
                     onClick = { showDialog = true },
-                    modifier = Modifier
+                    modifier = modifier
                         .size(56.dp) // Taille du fond rond
                 ) {
                     Icon(
@@ -299,7 +296,7 @@ fun HorizontalCalendarView(
                 Text("AI Planning Assistant", fontSize = 10.sp)//, modifier = Modifier.padding(top = 4.dp))
             }
 
-        }
+
 
     }
 
